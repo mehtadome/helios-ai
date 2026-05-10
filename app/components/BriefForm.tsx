@@ -80,6 +80,8 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
         videos: languages.map((lang) => ({
           language: lang,
           url: null,
+          video_url: null,
+          blob_url: null,
           status: "completed" as const,
         })),
       };

@@ -9,7 +9,10 @@ export interface DemoBrief {
 
 export interface VideoVariant {
   language: string;
+  /** Resolved by the API as blob_url ?? video_url ?? null. Portal always reads this field. */
   url: string | null;
+  video_url: string | null;  // HeyGen-hosted CDN URL — ephemeral, may expire
+  blob_url: string | null;   // customer-owned storage URL — permanent once set
   status: "rendering" | "completed" | "failed";
 }
 
