@@ -4,15 +4,22 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Brief } from "@/app/types";
 import { SECTION_LABELS } from "@/app/lib/constants";
+import DownloadModal from "./DownloadModal";
+
+// ---------------------------------------------------------------------------
+// Video placeholder
+// ---------------------------------------------------------------------------
 
 function VideoPlaceholder({
   language,
   status,
   url,
+  onDownloadClick,
 }: {
   language: string;
   status: string;
   url: string | null;
+  onDownloadClick: () => void;
 }) {
   if (url) {
     return (
@@ -83,7 +90,7 @@ function VideoPlaceholder({
         <div className="flex items-center gap-3">
           <span className="text-xs text-white/60">73s · MP4</span>
           <button
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onDownloadClick(); }}
             className="text-xs font-semibold text-white/80 hover:text-white flex items-center gap-1 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -104,9 +111,14 @@ function VideoPlaceholder({
   );
 }
 
+// ---------------------------------------------------------------------------
+// Brief detail
+// ---------------------------------------------------------------------------
+
 export default function BriefDetail({ brief }: { brief: Brief }) {
   const [activeLanguage, setActiveLanguage] = useState(brief.videos[0]?.language ?? brief.language);
   const [sectionsOpen, setSectionsOpen] = useState(false);
+  const [downloadTarget, setDownloadTarget] = useState<{ language: string; url: string | null } | null>(null);
 
   const activeVideo = brief.videos.find((v) => v.language === activeLanguage) ?? brief.videos[0];
   const hasSections = Object.keys(brief.sections).length > 0;
@@ -187,6 +199,9 @@ export default function BriefDetail({ brief }: { brief: Brief }) {
             language={activeLanguage}
             status={activeVideo?.status ?? "completed"}
             url={activeVideo?.url ?? null}
+            onDownloadClick={() =>
+              setDownloadTarget({ language: activeLanguage, url: activeVideo?.url ?? null })
+            }
           />
         </motion.div>
       </AnimatePresence>
@@ -238,6 +253,15 @@ export default function BriefDetail({ brief }: { brief: Brief }) {
         <p className="mt-4 text-xs text-muted text-center">
           Brief sections not available for this entry.
         </p>
+      )}
+
+      {/* Download modal */}
+      {downloadTarget && (
+        <DownloadModal
+          language={downloadTarget.language}
+          url={downloadTarget.url}
+          onClose={() => setDownloadTarget(null)}
+        />
       )}
     </motion.div>
   );
