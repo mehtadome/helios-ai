@@ -1,5 +1,7 @@
 # Helios AI
 
+**Live demo: [helios-ai-eosin.vercel.app](https://helios-ai-eosin.vercel.app)**
+
 Seller-enablement video generation platform built on [HeyGen's Video Agent API](https://docs.heygen.com). Sales teams submit a structured brief and receive a localized, avatar-narrated MP4 — without production crews or manual localization.
 
 Built as a POC for the HeyGen FDE take-home challenge.
