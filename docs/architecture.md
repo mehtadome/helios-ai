@@ -14,27 +14,27 @@ Three tiers, each shippable independently. POC proves the pipeline. Production a
 Browser
   └── Next.js (Vercel)
         ├── Form UI  →  API Route /api/generate
-        │                 ├── Claude Haiku (brief → structured prompt, streaming)
-        │                 └── HeyGen POST /v3/video-agents (job submit)
+        │                 └── HeyGen POST /v2/video_agent/submit_video_generation_task
+        │                       (brief context + role + language → HeyGen handles AI internally)
         └── SSE endpoint /api/status/[sessionId]
-              └── polls HeyGen GET /v3/video-agents/{session_id}
+              └── polls HeyGen GET /v2/video_agent/query_video_generation_task
                     └── on completed → video_url → browser plays MP4
 ```
 
 **Stack:**
 - **Framework:** Next.js App Router on Vercel
-- **LLM:** Claude Haiku via Vercel AI SDK (`useChat` / `streamText`) — transforms the 6-section brief into a HeyGen-optimized prompt, adds role variant and language context
+- **Video Agent:** HeyGen Video Agent API v3 — accepts the 6-section brief as context and handles script generation, avatar selection, and rendering internally; no external LLM required
 - **HeyGen:** direct REST calls from API routes (server-side, key never touches browser)
 - **Status delivery:** Server-Sent Events from a polling API route — no WebSocket infra needed at this stage
 - **Auth:** none in POC; HeyGen API key in Vercel env vars
 
-**Data flow for script generation:**
+**Data flow:**
 ```
-Brief JSON  →  Haiku prompt:
-  "You are writing a 60–90s sales enablement video script for a {role} seller.
-   Language: {language}. Sections: [open, problem, product, differentiators,
-   motion, close]. Return a single HeyGen-optimized prompt with scene direction."
-  →  HeyGen prompt string  →  POST /v3/video-agents
+Brief JSON  →  POST /v2/video_agent/submit_video_generation_task
+  { context: { role, language, sections }, ... }
+  →  HeyGen runs AI inference + rendering internally
+  →  session_id  →  poll /v2/video_agent/query_video_generation_task
+  →  on completed: video_url → browser plays MP4
 ```
 
 **What we skip at this tier (intentional):**
@@ -54,8 +54,7 @@ Browser
         ├── Form UI
         └── API Routes
               ├── /api/generate
-              │     ├── Haiku (streamText — script generation)
-              │     ├── HeyGen POST /v3/video-agents
+              │     ├── HeyGen POST /v2/video_agent/submit_video_generation_task
               │     └── Neon Postgres  ←  INSERT job row (status: pending)
               ├── /api/status/[jobId]
               │     ├── SELECT job from Postgres
@@ -113,8 +112,7 @@ Browser
               │                                        └── delivers to /api/workers/render
               ├── /api/workers/render  (serverless function, queue consumer)
               │     ├── validate job, check idempotency key (Postgres)
-              │     ├── call Haiku → structured prompt
-              │     ├── POST HeyGen /v3/video-agents (with callback_url)
+              │     ├── POST HeyGen /v2/video_agent/submit_video_generation_task (with callback_url)
               │     └── UPDATE job status → queued_heygen
               ├── /api/webhook  (HeyGen → job completed)
               │     ├── verify HMAC-SHA256
@@ -170,7 +168,7 @@ QStash handles this with room to spare. HeyGen rate limits are the actual ceilin
 - Webhook not received after 30 min: fallback polling job kicks in (cron every 5 min)
 
 ### Cost tracking
-- Each job row captures: `heygen_credit_cost`, `haiku_token_count`, `haiku_cost_usd`
+- Each job row captures: `heygen_credit_cost`, `heygen_render_time_s`
 - Neon view: `monthly_cost_by_org` — surfaces in internal dashboard
 - Alert if org exceeds budget threshold
 
@@ -187,7 +185,7 @@ QStash handles this with room to spare. HeyGen rate limits are the actual ceilin
 | Concern | Tier 0 | Tier 1 | Tier 2 |
 |---|---|---|---|
 | Framework | Next.js + Vercel | ← same | ← same (Edge runtime) |
-| LLM | Claude Haiku / Vercel AI SDK | ← same | ← same |
+| AI/Script | HeyGen Video Agent (internal) | ← same | ← same |
 | Auth | none | Clerk (SSO) | Clerk + WorkOS |
 | Job queue | none (sync) | none (webhook) | Upstash QStash |
 | Metadata DB | none | Neon Postgres | ← same |

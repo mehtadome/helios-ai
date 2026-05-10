@@ -20,7 +20,7 @@ Built as a POC for the HeyGen FDE take-home challenge.
 | Framework | Next.js 16 (App Router, React 19) |
 | Styling | Tailwind CSS v4 |
 | Animation | Framer Motion v12 |
-| Script generation | Claude Haiku (planned) |
+| Script generation | HeyGen Video Agent API v3 (internal) |
 | Video generation | HeyGen Video Agent API v3 (planned) |
 
 ## Running locally

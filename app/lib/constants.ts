@@ -92,7 +92,7 @@ export const STATUS_CONFIG: Record<BriefStatus, { dot: string; label: string }> 
 // ---------------------------------------------------------------------------
 
 export const STATUS_STEPS = [
-  { id: "scripting", label: "Script generating", sublabel: "Claude Haiku" },
+  { id: "scripting", label: "Script generating", sublabel: "HeyGen Video Agent" },
   { id: "rendering", label: "Video rendering",   sublabel: "HeyGen API"  },
   { id: "complete",  label: "Complete",           sublabel: "MP4 ready"  },
 ] as const;

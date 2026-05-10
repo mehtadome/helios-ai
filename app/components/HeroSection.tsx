@@ -27,7 +27,7 @@ export default function HeroSection() {
             className="inline-flex items-center gap-2 w-fit bg-blue/10 text-blue text-xs font-semibold px-3 py-1.5 rounded-full"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-blue" />
-            Powered by HeyGen · Claude Haiku
+            Powered by HeyGen Video Agent API
           </motion.div>
 
           <div className="overflow-hidden">
