@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Helios AI
 
-## Getting Started
+Seller-enablement video generation platform built on [HeyGen's Video Agent API](https://docs.heygen.com). Sales teams submit a structured brief and receive a localized, avatar-narrated MP4 — without production crews or manual localization.
 
-First, run the development server:
+Built as a POC for the HeyGen FDE take-home challenge.
+
+## What it does
+
+- **Brief input** — a 6-section structured form (open, problem, product, differentiators, motion, close) with role variant (AE / SDR / Partner Manager) and target language selection
+- **Multi-language** — one brief generates parallel video outputs in up to 6 languages (English, French, Spanish, Chinese, Italian, German)
+- **Portal** — brief history sidebar, per-language video tabs, rendering status tracker
+- **Demo briefs** — five pre-loaded scenarios covering AE launch, SDR pipeline, partner enablement, competitive response, and international rollout
+
+## Stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router, React 19) |
+| Styling | Tailwind CSS v4 |
+| Animation | Framer Motion v12 |
+| Script generation | Claude Haiku (planned) |
+| Video generation | HeyGen Video Agent API v3 (planned) |
+
+## Running locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). The portal is at [http://localhost:3000/portal](http://localhost:3000/portal).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build   # production build
+npm run lint    # eslint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Architecture
 
-## Learn More
+See [`docs/architecture.md`](docs/architecture.md) for the full three-tier design (Helios systems → integration middleware → HeyGen API), async job model, and scale story (10k+ videos/year).
 
-To learn more about Next.js, take a look at the following resources:
+See [`docs/api.md`](docs/api.md) for HeyGen Video Agent API integration notes.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/
+  components/       # BriefForm, HeroSection, Navbar
+  lib/
+    constants.ts    # static config: roles, languages, sections, status steps, demo briefs
+    mock-data.ts    # seed data to be replaced by API calls
+  portal/
+    components/     # PortalShell, BriefSidebar, BriefDetail
+  types.ts          # shared TypeScript interfaces
+docs/               # architecture and API notes
+```
