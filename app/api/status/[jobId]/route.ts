@@ -85,7 +85,10 @@ export async function GET(
   // preventing duplicate translation batches being sent to HeyGen for the same job.
   const shouldDispatch = req.nextUrl.searchParams.get("dispatch") === "1";
   const languagesParam = req.nextUrl.searchParams.get("languages");
-  const allLanguages: string[] = languagesParam ? JSON.parse(languagesParam) : [];
+  let allLanguages: string[] = [];
+  try {
+    if (languagesParam) allLanguages = JSON.parse(languagesParam);
+  } catch { /* malformed param — skip translation dispatch */ }
   const primaryLanguage = allLanguages.includes("English") ? "English" : allLanguages[0];
   const translationLanguages = shouldDispatch
     ? allLanguages.filter((l) => l !== primaryLanguage)
