@@ -105,7 +105,7 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
       while (true) {
         await delay(4000);
         try {
-          const res = await fetch(`/api/status/${jobId}?languages=${languagesParam}`);
+          const res = await fetch(`/api/status/${jobId}?languages=${languagesParam}&dispatch=1`);
           const data = await res.json();
           if (!data.ok) break;
           if (data.status === "failed") {
