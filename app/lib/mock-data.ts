@@ -12,13 +12,13 @@ export const INITIAL_BRIEFS: Brief[] = [
     id: "brief-demo-1",
     role: "Account Executive",
     language: "English",
-    status: "completed",
+    status: "rendering",
     createdAt: "3 hours ago",
     sections: {},
     videos: [
-      { language: "English", url: null, video_url: null, blob_url: null, status: "completed" },
-      { language: "French",  url: null, video_url: null, blob_url: null, status: "completed" },
-      { language: "Spanish", url: null, video_url: null, blob_url: null, status: "completed" },
+      { language: "English", url: null, video_url: null, blob_url: null, status: "rendering" },
+      { language: "French",  url: null, video_url: null, blob_url: null, status: "rendering" },
+      { language: "Spanish", url: null, video_url: null, blob_url: null, status: "rendering" },
     ],
   },
   {
