@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     orientation: "landscape",
     files:       buildFiles(sections, baseUrl),
     callback_url: `${baseUrl}/api/webhook`,
-    callback_id:  `helios-${Date.now()}`,
+    callback_id:  crypto.randomUUID(),
   };
 
   // Step 6 — submit to HeyGen Video Agent API
