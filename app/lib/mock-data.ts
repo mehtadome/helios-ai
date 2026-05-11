@@ -16,9 +16,9 @@ export const INITIAL_BRIEFS: Brief[] = [
     createdAt: "3 hours ago",
     sections: {},
     videos: [
-      { language: "English", url: null, status: "completed" },
-      { language: "French",  url: null, status: "completed" },
-      { language: "Spanish", url: null, status: "completed" },
+      { language: "English", url: null, video_url: null, blob_url: null, status: "completed" },
+      { language: "French",  url: null, video_url: null, blob_url: null, status: "completed" },
+      { language: "Spanish", url: null, video_url: null, blob_url: null, status: "completed" },
     ],
   },
   {
@@ -28,7 +28,7 @@ export const INITIAL_BRIEFS: Brief[] = [
     status: "rendering",
     createdAt: "12 min ago",
     sections: {},
-    videos: [{ language: "French", url: null, status: "rendering" }],
+    videos: [{ language: "French", url: null, video_url: null, blob_url: null, status: "rendering" }],
   },
 ];
 

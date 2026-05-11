@@ -14,6 +14,7 @@ import {
 
 type Status = "idle" | "scripting" | "rendering" | "complete" | "error";
 
+
 const containerVariants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
@@ -63,13 +64,46 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
     e.preventDefault();
     if (!isValid) return;
     setStatus("scripting");
-    await delay(1800);
+
+    // Submit to HeyGen
+    let jobId: string;
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sections, role, languages }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error ?? "Generation failed");
+      jobId = data.jobId;
+    } catch (err) {
+      setStatus("error");
+      console.error("[BriefForm] generate error:", err);
+      return;
+    }
+
     setStatus("rendering");
-    await delay(2800);
+
+    // Poll until complete or failed
+    const languagesParam = encodeURIComponent(JSON.stringify(languages));
+    let video_url: string | null = null;
+
+    while (true) {
+      await delay(4000);
+      try {
+        const res = await fetch(`/api/status/${jobId}?languages=${languagesParam}`);
+        const data = await res.json();
+        if (!data.ok) break;
+        if (data.status === "failed") { setStatus("error"); return; }
+        if (data.status === "completed") { video_url = data.video_url; break; }
+      } catch {
+        break;
+      }
+    }
+
     setStatus("complete");
 
     if (onBriefSubmitted) {
-      await delay(900);
       const newBrief: Brief = {
         id: `brief-${Date.now()}`,
         role,
@@ -79,7 +113,9 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
         sections: sections as Record<string, string>,
         videos: languages.map((lang) => ({
           language: lang,
-          url: null,
+          url: lang === languages[0] ? video_url : null,
+          video_url: lang === languages[0] ? video_url : null,
+          blob_url: null,
           status: "completed" as const,
         })),
       };

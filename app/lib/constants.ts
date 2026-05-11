@@ -1,6 +1,30 @@
 import type { BriefStatus, DemoBrief } from "@/app/types";
 
 // ---------------------------------------------------------------------------
+// HeyGen integration — swap PENDING_ENTERPRISE values once enterprise account is live.
+// Avatar ID: call GET /v2/avatars to list available IDs.
+// Voice IDs: call GET /v2/voices to list available IDs per language.
+// ---------------------------------------------------------------------------
+
+export const AVATAR_ID = "PENDING_ENTERPRISE";
+
+export const VOICE_IDS: Record<string, string> = {
+  English: "PENDING_ENTERPRISE",
+  French:  "PENDING_ENTERPRISE",
+  Spanish: "PENDING_ENTERPRISE",
+  Chinese: "PENDING_ENTERPRISE",
+  Italian: "PENDING_ENTERPRISE",
+  German:  "PENDING_ENTERPRISE",
+};
+
+// B-roll asset URLs per section — must be publicly accessible for HeyGen to fetch.
+// Swap placeholder paths for real Helios AI Studio product screens once available.
+export const BROLL_ASSETS: Partial<Record<SectionKey, string>> = {
+  product:         "/broll/product.svg",
+  differentiators: "/broll/differentiators.svg",
+};
+
+// ---------------------------------------------------------------------------
 // Selectable options
 // ---------------------------------------------------------------------------
 
@@ -65,6 +89,22 @@ export const SECTIONS = [
 ] as const;
 
 export type SectionKey = (typeof SECTIONS)[number]["key"];
+
+export type SceneType = "avatar_only" | "avatar_text" | "avatar_broll";
+
+/**
+ * Deterministic mapping from brief section → HeyGen scene type.
+ * Driven by semantic meaning — not user-selected, not inferred from prompt content.
+ * Passing a monolithic prompt risks flattened tone, misplaced B-roll, and broken pacing.
+ */
+export const SCENE_TYPES: Record<SectionKey, SceneType> = {
+  open:             "avatar_only",   // hook — full attention on presenter
+  problem:          "avatar_text",   // pain framing — text overlay reinforces the point
+  product:          "avatar_broll",  // product definition — show the actual UI
+  differentiators:  "avatar_broll",  // three things to lead with — product screenshots
+  motion:           "avatar_text",   // seller actions — text keeps CTA visible
+  close:            "avatar_only",   // urgency — back to presenter, personal and direct
+};
 
 /** Human-readable section labels used in the brief detail view. */
 export const SECTION_LABELS: Record<string, string> = {
