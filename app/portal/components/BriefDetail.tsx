@@ -155,7 +155,7 @@ export default function BriefDetail({ brief }: { brief: Brief }) {
             )}
           </div>
           <h1 className="text-xl font-black text-foreground tracking-tight">
-            Helios AI Studio — Launch Brief
+            {brief.role} Brief — {brief.language}
           </h1>
           <p className="text-xs text-muted mt-1">Submitted {brief.createdAt}</p>
         </div>
