@@ -102,7 +102,8 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
       const languagesParam = encodeURIComponent(JSON.stringify(languages));
       let video_url: string | null = null;
 
-      while (true) {
+      const MAX_POLLS = 75; // 5 min at 4s intervals — well beyond HeyGen's generation window
+      for (let poll = 0; poll < MAX_POLLS; poll++) {
         await delay(4000);
         try {
           const res = await fetch(`/api/status/${jobId}?languages=${languagesParam}&dispatch=1`);
@@ -117,6 +118,12 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
         } catch {
           break;
         }
+      }
+
+      if (!video_url) {
+        setErrorMessage("Generation timed out — HeyGen job did not resolve within 5 minutes.");
+        setStatus("error");
+        return;
       }
 
       setStatus("complete");
