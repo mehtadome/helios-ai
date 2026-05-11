@@ -6,6 +6,7 @@ import type { BriefStatus } from "@/app/types";
 function mapStatus(heygenStatus: string): BriefStatus {
   if (heygenStatus === "completed") return "completed";
   if (heygenStatus === "failed")    return "failed";
+  if (heygenStatus === "thinking")  return "scripting";
   return "rendering";
 }
 
