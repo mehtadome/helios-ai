@@ -14,10 +14,11 @@ Three tiers, each shippable independently. POC proves the pipeline. Production a
 Browser
   └── Next.js (Vercel)
         ├── Form UI  →  API Route /api/generate
-        │                 └── HeyGen POST /v2/video_agent/submit_video_generation_task
+        │                 └── HeyGen POST /v3/video-agents
         │                       (brief context + role + language → HeyGen handles AI internally)
-        └── SSE endpoint /api/status/[sessionId]
-              └── polls HeyGen GET /v2/video_agent/query_video_generation_task
+        └── REST endpoint /api/status/[sessionId]  (polled every 4s from browser)
+              ├── HeyGen GET /v3/video-agents/{session_id}  →  video_id
+              └── HeyGen GET /v3/videos/{video_id}
                     └── on completed → video_url → browser plays MP4
 ```
 
@@ -25,15 +26,16 @@ Browser
 - **Framework:** Next.js App Router on Vercel
 - **Video Agent:** HeyGen Video Agent API v3 — accepts the 6-section brief as context and handles script generation, avatar selection, and rendering internally; no external LLM required
 - **HeyGen:** direct REST calls from API routes (server-side, key never touches browser)
-- **Status delivery:** Server-Sent Events from a polling API route — no WebSocket infra needed at this stage
+- **Status delivery:** Browser polls REST `/api/status/[sessionId]` every 4s — two-hop: session_id → video_id → video_url. SSE or WebSocket added at Tier 1 when webhook delivers the completion signal
 - **Auth:** none in POC; HeyGen API key in Vercel env vars
 
 **Data flow:**
 ```
-Brief JSON  →  POST /v2/video_agent/submit_video_generation_task
-  { context: { role, language, sections }, ... }
+Brief JSON  →  POST /v3/video-agents
+  { prompt, avatar_id, voice_id, files, callback_url, ... }
   →  HeyGen runs AI inference + rendering internally
-  →  session_id  →  poll /v2/video_agent/query_video_generation_task
+  →  session_id  →  poll GET /v3/video-agents/{session_id}  →  video_id
+                →  poll GET /v3/videos/{video_id}
   →  on completed: video_url → browser plays MP4
 ```
 
@@ -54,12 +56,12 @@ Browser
         ├── Form UI
         └── API Routes
               ├── /api/generate
-              │     ├── HeyGen POST /v2/video_agent/submit_video_generation_task
+              │     ├── HeyGen POST /v3/video-agents
               │     └── Neon Postgres  ←  INSERT job row (status: pending)
               ├── /api/status/[jobId]
               │     ├── SELECT job from Postgres
               │     ├── if still pending: poll HeyGen, UPDATE status
-              │     └── SSE stream to browser
+              │     └── SSE stream to browser (webhook delivers completion signal)
               └── /api/webhook  (HeyGen callback_url)
                     ├── verify HMAC-SHA256
                     ├── UPDATE job row (status: completed, video_url)
@@ -112,7 +114,7 @@ Browser
               │                                        └── delivers to /api/workers/render
               ├── /api/workers/render  (serverless function, queue consumer)
               │     ├── validate job, check idempotency key (Postgres)
-              │     ├── POST HeyGen /v2/video_agent/submit_video_generation_task (with callback_url)
+              │     ├── POST HeyGen /v3/video-agents (with callback_url)
               │     └── UPDATE job status → queued_heygen
               ├── /api/webhook  (HeyGen → job completed)
               │     ├── verify HMAC-SHA256
@@ -192,4 +194,4 @@ QStash handles this with room to spare. HeyGen rate limits are the actual ceilin
 | Video storage | HeyGen URL | Vercel Blob | Cloudflare R2 |
 | CDN | HeyGen CDN | Vercel CDN | Cloudflare CDN |
 | Monitoring | Vercel Analytics | + Log Drains | + Datadog/Axiom |
-| Status delivery | SSE polling | SSE + webhook | SSE + queue events |
+| Status delivery | REST polling (4s) | SSE + webhook | SSE + queue events |
