@@ -66,6 +66,8 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
     setRole(demo.role as (typeof ROLES)[number]);
     setLanguages(demo.languages);
     setSections(demo.sections);
+    if (demo.avatar_id) setAvatarId(demo.avatar_id);
+    if (demo.voice_id)  setVoiceId(demo.voice_id);
     setDemoOpen(false);
   };
 

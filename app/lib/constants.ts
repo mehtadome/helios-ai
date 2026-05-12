@@ -28,10 +28,10 @@ export const AVATARS = [
     preview: "https://files2.heygen.ai/avatar/v3/c3d1baaebbe84752b7a473373c6cd385_42780/preview_target.webp",
   },
   {
-    id: "Adriana_Business_Front_2_public",
-    name: "Adriana (Alt)",
+    id: "Abigail_standing_office_front",
+    name: "Abigail",
     gender: "female" as const,
-    preview: "https://files2.heygen.ai/avatar/v3/88dbd2785def417ca7a2b79d4cf40c6d_42780/preview_talk_3.webp",
+    preview: "https://files2.heygen.ai/avatar/v3/463208b6cad140d2b263535826838e3a_39240/preview_target.webp",
   },
   {
     id: "Amelia_standing_business_training_front",
@@ -200,6 +200,8 @@ export const DEMO_BRIEFS: DemoBrief[] = [
     name: "AE Launch Brief",
     role: "Account Executive",
     languages: ["English", "French"],
+    avatar_id: "Adriana_BizTalk_Front_public",
+    voice_id:  "f8c69e517f424cafaecde32dde57096b", // Allison (female)
     sections: {
       open: "Six weeks from today, every buyer in your territory will be asking about generative AI in enterprise infrastructure. The sellers who can answer that question fluently will win. Here's your playbook.",
       problem: "Your buyers are already trialing AI point solutions from vendors who don't understand their stack. If Helios doesn't show up with a credible, integrated AI story first, someone else will own that conversation — and that budget.",
@@ -216,6 +218,8 @@ export const DEMO_BRIEFS: DemoBrief[] = [
     name: "SDR Pipeline Brief",
     role: "SDR",
     languages: ["Spanish"],
+    avatar_id: "Adrian_public_2_20240312",
+    voice_id:  "d92994ae0de34b2e8659b456a2f388b8", // John (male)
     sections: {
       open: "You have one job in the next six weeks: get Helios AI Studio into every discovery call your AEs are running. Here's the talk track that will get you there.",
       problem:
@@ -234,6 +238,8 @@ export const DEMO_BRIEFS: DemoBrief[] = [
     name: "Partner Manager Brief",
     role: "Partner Manager",
     languages: ["German", "Chinese"],
+    avatar_id: "Amelia_standing_business_training_front",
+    voice_id:  "42d00d4aac5441279d8536cd6b52c53c", // Hope (female)
     sections: {
       open: "Your partners are your multiplier for the AI Studio launch. If they understand the product, they'll bring it into accounts you've never touched. If they don't, a competitor will get there first through their book of business.",
       problem:
@@ -252,6 +258,8 @@ export const DEMO_BRIEFS: DemoBrief[] = [
     name: "Competitive Response",
     role: "Account Executive",
     languages: ["English"],
+    avatar_id: "Albert_public_1",
+    voice_id:  "828b59f834fd4c7188da322b6d9b6c75", // David (male)
     sections: {
       open: "A competitor just showed your buyer an AI demo last week. Here's how you walk into that room, acknowledge it, and win.",
       problem:
@@ -270,6 +278,8 @@ export const DEMO_BRIEFS: DemoBrief[] = [
     name: "International Launch",
     role: "SDR",
     languages: ["French", "Spanish", "Italian"],
+    avatar_id: "Abigail_standing_office_front",
+    voice_id:  "b966c31caf124c2a99f19ff1479c964f", // Jessica (female)
     sections: {
       open: "Today we're taking Helios AI Studio global. In the next 6 weeks, sellers across Europe and Latin America need to be ready to have the AI conversation in their markets, in their language, with their buyers.",
       problem:
