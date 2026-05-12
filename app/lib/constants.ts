@@ -1,20 +1,22 @@
 import type { BriefStatus, DemoBrief } from "@/app/types";
 
 // ---------------------------------------------------------------------------
-// HeyGen integration — swap PENDING_ENTERPRISE values once enterprise account is live.
-// Avatar ID: call GET /v2/avatars to list available IDs.
-// Voice IDs: call GET /v2/voices to list available IDs per language.
+// HeyGen integration — queried 2026-05-12 from enterprise account.
+// Full dumps in private/heygen_avatars.json and private/heygen_voices.json.
 // ---------------------------------------------------------------------------
 
-export const AVATAR_ID = "PENDING_ENTERPRISE";
+// Adriana BizTalk Front — professional female, front-facing, non-premium
+export const AVATAR_ID = "Adriana_BizTalk_Front_public";
 
+// Female voices, one per language. English is primary.
+// Swap any voice_id using private/heygen_voices.json if needed.
 export const VOICE_IDS: Record<string, string> = {
-  English: "PENDING_ENTERPRISE",
-  French:  "PENDING_ENTERPRISE",
-  Spanish: "PENDING_ENTERPRISE",
-  Chinese: "PENDING_ENTERPRISE",
-  Italian: "PENDING_ENTERPRISE",
-  German:  "PENDING_ENTERPRISE",
+  English: "f8c69e517f424cafaecde32dde57096b", // Allison
+  French:  "67375f26ab6e44ce8569cea3840ef594", // Gaëlle
+  Spanish: "689f48196a9a43c4bbbb67c14fdbb4c6", // Sara Martin
+  Chinese: "1b86e7a08ce641c39e530455feb4285b", // Amy
+  Italian: "bf04704b87d94e4cb4f2d8f27d8c6e3a", // Violetta
+  German:  "becf484d4ec3411b992206f95e6a3aa5", // Lea
 };
 
 // B-roll asset URLs per section — must be publicly accessible for HeyGen to fetch.
