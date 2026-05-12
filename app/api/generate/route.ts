@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AVATAR_ID, VOICE_IDS, BROLL_ASSETS, SCENE_TYPES, type SectionKey } from "@/app/lib/constants";
+import { getRedis } from "@/app/lib/redis";
 
-// Step 2 — Per-IP in-memory cooldown. One active generation per IP.
-// Module-scope Map persists across requests within the same function instance.
-// On Vercel, each warm instance has its own Map; this is fine at POC scale.
-// At production scale, move this to Redis/Upstash for cross-instance coordination.
-const ipCooldown = new Map<string, number>();
-const COOLDOWN_MS = 90_000; // 90s matches the max expected generation time
+const COOLDOWN_S = 90; // seconds — matches max expected generation time
 
 interface GenerateBody {
   sections: Partial<Record<SectionKey, string>>;
   role: string;
   languages: string[];
+  avatar_id?: string;
+  voice_id?: string;
 }
 
 // Ordered section keys — drives prompt structure and scene guidance.
@@ -65,14 +63,17 @@ function buildFiles(
 }
 
 export async function POST(req: NextRequest) {
-  // Step 2 — Check per-IP cooldown before touching HeyGen.
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-  const cooldownUntil = ipCooldown.get(ip) ?? 0;
-  const now = Date.now();
-  if (now < cooldownUntil) {
-    const retryAfter = Math.ceil((cooldownUntil - now) / 1000);
+  console.log(`[generate] POST from ${ip}`);
+
+  // Per-IP cooldown via Redis — works across all Vercel function instances.
+  const redis = await getRedis();
+  const cooldownKey = `helios:cooldown:${ip}`;
+  const ttl = await redis.ttl(cooldownKey);
+  if (ttl > 0) {
+    console.log(`[generate] rate limited — ${ip} must wait ${ttl}s`);
     return NextResponse.json(
-      { ok: false, error: "rate_limited", retryAfter },
+      { ok: false, error: "rate_limited", retryAfter: ttl },
       { status: 429 }
     );
   }
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { sections, role, languages } = body;
+  const { sections, role, languages, avatar_id, voice_id } = body;
 
   if (!sections || typeof sections !== "object") {
     return NextResponse.json({ ok: false, error: "Missing sections" }, { status: 400 });
@@ -107,8 +108,8 @@ export async function POST(req: NextRequest) {
 
   const payload = {
     prompt:      buildPrompt(sections, role, primaryLanguage),
-    avatar_id:   AVATAR_ID,
-    voice_id:    VOICE_IDS[primaryLanguage],
+    avatar_id:   avatar_id ?? AVATAR_ID,
+    voice_id:    voice_id  ?? VOICE_IDS[primaryLanguage],
     orientation: "landscape",
     files:       buildFiles(sections, baseUrl),
     callback_url: `${baseUrl}/api/webhook`,
@@ -121,6 +122,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "HEYGEN_API_KEY not configured" }, { status: 500 });
   }
 
+  console.log(`[generate] submitting to HeyGen — avatar: ${payload.avatar_id}, voice: ${payload.voice_id}, language: ${primaryLanguage}, sections: ${Object.keys(sections).join(", ")}`);
+
   let heygenRes: Response;
   try {
     heygenRes = await fetch("https://api.heygen.com/v3/video-agents", {
@@ -131,14 +134,16 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify(payload),
     });
-  } catch {
+  } catch (err) {
+    console.error("[generate] network error reaching HeyGen:", err);
     return NextResponse.json({ ok: false, error: "Failed to reach HeyGen API" }, { status: 502 });
   }
 
   // Step 1 — Detect HeyGen 429 and surface retryAfter to the client.
   if (heygenRes.status === 429) {
     const retryAfter = parseInt(heygenRes.headers.get("Retry-After") ?? "60", 10);
-    ipCooldown.set(ip, Date.now() + retryAfter * 1000);
+    await redis.set(cooldownKey, "1", { EX: retryAfter });
+    console.warn(`[generate] HeyGen 429 — retryAfter: ${retryAfter}s`);
     return NextResponse.json(
       { ok: false, error: "rate_limited", retryAfter },
       { status: 429 }
@@ -147,6 +152,7 @@ export async function POST(req: NextRequest) {
 
   if (!heygenRes.ok) {
     const text = await heygenRes.text();
+    console.error(`[generate] HeyGen error ${heygenRes.status}:`, text);
     return NextResponse.json(
       { ok: false, error: `HeyGen returned ${heygenRes.status}: ${text}` },
       { status: 502 }
@@ -157,11 +163,13 @@ export async function POST(req: NextRequest) {
   const sessionId: string = data?.data?.session_id;
 
   if (!sessionId) {
+    console.error("[generate] no session_id in HeyGen response:", JSON.stringify(data));
     return NextResponse.json({ ok: false, error: "No session_id in HeyGen response" }, { status: 502 });
   }
 
-  // Set per-IP cooldown to prevent queuing a second job while the first renders.
-  ipCooldown.set(ip, Date.now() + COOLDOWN_MS);
+  // Set per-IP cooldown in Redis — expires automatically, no cleanup needed.
+  await redis.set(cooldownKey, "1", { EX: COOLDOWN_S });
+  console.log(`[generate] job accepted — session_id: ${sessionId}, languages: ${languages.join(", ")}`);
 
   return NextResponse.json({ ok: true, jobId: sessionId, languages });
 }

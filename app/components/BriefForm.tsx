@@ -9,6 +9,8 @@ import {
   SECTIONS,
   STATUS_STEPS,
   DEMO_BRIEFS,
+  AVATARS,
+  VOICES_EN,
   type SectionKey,
 } from "@/app/lib/constants";
 
@@ -30,18 +32,21 @@ const fieldVariants = {
 };
 
 interface BriefFormProps {
-  onBriefSubmitted?: (brief: Brief) => void;
+  onBriefAdded?: (brief: Brief) => void;
+  onBriefCompleted?: (brief: Brief) => void;
 }
 
-export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
+export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormProps) {
   const [role, setRole] = useState<(typeof ROLES)[number]>("Account Executive");
   const [languages, setLanguages] = useState<string[]>(["English"]);
   const [sections, setSections] = useState<Partial<Record<SectionKey, string>>>({});
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryAfter, setRetryAfter] = useState(0);
+  const [avatarId, setAvatarId] = useState<string>(AVATARS[0].id);
+  const [voiceId, setVoiceId] = useState<string>(VOICES_EN[0].id);
   const [demoOpen, setDemoOpen] = useState(false);
-  // Step 3 — code-level lockout: blocks concurrent submits even if the UI guard fires late
+  const [elapsed, setElapsed] = useState(0);
   const submitting = useRef(false);
 
   const isValid =
@@ -61,6 +66,8 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
     setRole(demo.role as (typeof ROLES)[number]);
     setLanguages(demo.languages);
     setSections(demo.sections);
+    if (demo.avatar_id) setAvatarId(demo.avatar_id);
+    if (demo.voice_id)  setVoiceId(demo.voice_id);
     setDemoOpen(false);
   };
 
@@ -74,17 +81,20 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
     setStatus("scripting");
 
     try {
+      // Stable ID shared across both callbacks so PortalShell can upsert in-place.
+      const briefId = `brief-${Date.now()}`;
+      const primaryLanguage = languages.includes("English") ? "English" : languages[0];
+
       // Submit to HeyGen
       let jobId: string;
       try {
         const res = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sections, role, languages }),
+          body: JSON.stringify({ sections, role, languages, avatar_id: avatarId, voice_id: voiceId }),
         });
         const data = await res.json();
         if (!data.ok) {
-          // Step 4 — capture retryAfter for rate-limit countdown
           if (data.error === "rate_limited") setRetryAfter(data.retryAfter ?? 60);
           throw new Error(data.error ?? "Generation failed");
         }
@@ -98,11 +108,29 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
 
       setStatus("rendering");
 
+      // Add to sidebar immediately so the user can navigate away and submit another brief.
+      // The async poll loop below continues even if this component unmounts.
+      onBriefAdded?.({
+        id: briefId,
+        role,
+        language: primaryLanguage,
+        status: "rendering",
+        createdAt: "Just now",
+        sections: sections as Record<string, string>,
+        videos: languages.map((lang) => ({
+          language: lang,
+          url: null,
+          video_url: null,
+          blob_url: null,
+          status: "rendering" as const,
+        })),
+      });
+
       // Poll until complete or failed
       const languagesParam = encodeURIComponent(JSON.stringify(languages));
       let video_url: string | null = null;
 
-      const MAX_POLLS = 75; // 5 min at 4s intervals — well beyond HeyGen's generation window
+      const MAX_POLLS = 900; // 60 min hard ceiling — rely on HeyGen's failed signal, not this cap
       for (let poll = 0; poll < MAX_POLLS; poll++) {
         await delay(4000);
         try {
@@ -121,31 +149,29 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
       }
 
       if (!video_url) {
-        setErrorMessage("Generation timed out — HeyGen job did not resolve within 5 minutes.");
+        setErrorMessage("Generation timed out — HeyGen did not return a completed or failed status within 60 minutes.");
         setStatus("error");
         return;
       }
 
       setStatus("complete");
 
-      if (onBriefSubmitted) {
-        const newBrief: Brief = {
-          id: `brief-${Date.now()}`,
-          role,
-          language: languages[0],
-          status: "completed",
-          createdAt: "Just now",
-          sections: sections as Record<string, string>,
-          videos: languages.map((lang) => ({
-            language: lang,
-            url: lang === languages[0] ? video_url : null,
-            video_url: lang === languages[0] ? video_url : null,
-            blob_url: null,
-            status: "completed" as const,
-          })),
-        };
-        onBriefSubmitted(newBrief);
-      }
+      // Update the existing sidebar entry in-place — no navigation side-effect.
+      onBriefCompleted?.({
+        id: briefId,
+        role,
+        language: primaryLanguage,
+        status: "completed",
+        createdAt: "Just now",
+        sections: sections as Record<string, string>,
+        videos: languages.map((lang) => ({
+          language: lang,
+          url: lang === primaryLanguage ? video_url : null,
+          video_url: lang === primaryLanguage ? video_url : null,
+          blob_url: null,
+          status: lang === primaryLanguage ? "completed" as const : "rendering" as const,
+        })),
+      });
     } finally {
       submitting.current = false;
     }
@@ -156,6 +182,16 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
     setErrorMessage(null);
     setRetryAfter(0);
   };
+
+  // Elapsed timer — runs while generating, resets on idle/error/complete
+  useEffect(() => {
+    if (status !== "scripting" && status !== "rendering") {
+      setElapsed(0);
+      return;
+    }
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [status]);
 
   // Step 4 — countdown timer: auto-resets to idle when retryAfter expires
   useEffect(() => {
@@ -316,6 +352,71 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
               </div>
             </motion.div>
 
+            {/* Avatar + Voice selection */}
+            <motion.div variants={fieldVariants} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">
+                  Avatar
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                  {AVATARS.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => {
+                        setAvatarId(a.id);
+                        // Auto-switch voice to match gender if current voice is wrong gender
+                        const currentVoice = VOICES_EN.find((v) => v.id === voiceId);
+                        if (currentVoice?.gender !== a.gender) {
+                          const match = VOICES_EN.find((v) => v.gender === a.gender);
+                          if (match) setVoiceId(match.id);
+                        }
+                      }}
+                      className={`relative rounded-xl overflow-hidden border-2 transition-all ${
+                        avatarId === a.id
+                          ? "border-blue shadow-sm"
+                          : "border-transparent hover:border-border"
+                      }`}
+                    >
+                      <img
+                        src={a.preview}
+                        alt={a.name}
+                        className="w-full aspect-[3/4] object-cover"
+                      />
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 py-1.5">
+                        <p className="text-[10px] font-semibold text-white leading-tight">{a.name}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">
+                  Voice
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {VOICES_EN.filter((v) => {
+                    const selectedAvatar = AVATARS.find((a) => a.id === avatarId);
+                    return v.gender === (selectedAvatar?.gender ?? "female");
+                  }).map((v) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setVoiceId(v.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                        voiceId === v.id
+                          ? "bg-blue text-white border-blue"
+                          : "bg-white text-muted border-border hover:border-blue/50 hover:text-foreground"
+                      }`}
+                    >
+                      {v.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
             {/* Brief sections */}
             {SECTIONS.map((section) => {
               const value = sections[section.key] ?? "";
@@ -372,7 +473,7 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
               </motion.button>
               <p className="text-center text-xs text-muted mt-3">
                 {isValid
-                  ? `Generating ${languages.length} video${languages.length > 1 ? "s" : ""} — estimated 60–90 seconds`
+                  ? `Generating ${languages.length} video${languages.length > 1 ? "s" : ""}`
                   : "Fill in all sections to enable generation"}
               </p>
             </motion.div>
@@ -409,7 +510,11 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
               ) : status !== "complete" ? (
                 <span className="flex items-center gap-1.5 text-xs font-medium text-blue">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue animate-pulse" />
-                  Processing
+                  {elapsed > 0
+                    ? elapsed >= 60
+                      ? `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`
+                      : `${elapsed}s`
+                    : "Processing"}
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5 text-xs font-medium text-green-600">
@@ -503,7 +608,7 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
             )}
 
             {/* Reset button (standalone mode only) */}
-            {status === "complete" && !onBriefSubmitted && (
+            {status === "complete" && !onBriefAdded && (
               <div className="border-t border-border px-6 py-5 flex justify-center">
                 <button
                   onClick={handleReset}

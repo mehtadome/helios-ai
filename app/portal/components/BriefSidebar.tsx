@@ -9,11 +9,18 @@ interface Props {
   selectedId: string;
   onSelect: (id: string) => void;
   onNew: () => void;
+  onRefresh: () => void;
+  refreshing: boolean;
 }
 
-export default function BriefSidebar({ briefs, selectedId, onSelect, onNew }: Props) {
+export default function BriefSidebar({ briefs, selectedId, onSelect, onNew, onRefresh, refreshing }: Props) {
   return (
     <aside className="w-72 flex-shrink-0 border-r border-border flex flex-col h-full">
+      <div className="px-4 pt-4 pb-2">
+        <a href="/" className="inline-flex items-center gap-1 text-xs text-muted hover:text-foreground transition-colors">
+          <span>←</span> Home
+        </a>
+      </div>
       <div className="px-4 py-5 border-b border-border flex items-center justify-between">
         <div>
           <h2 className="text-sm font-black text-foreground tracking-tight">
@@ -23,16 +30,34 @@ export default function BriefSidebar({ briefs, selectedId, onSelect, onNew }: Pr
             {briefs.length} brief{briefs.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <button
-          onClick={onNew}
-          className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full transition-all border ${
-            selectedId === "new"
-              ? "bg-blue text-white border-blue"
-              : "border-border text-muted hover:border-blue hover:text-blue"
-          }`}
-        >
-          <span aria-hidden>+</span> New
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onRefresh}
+            disabled={refreshing}
+            title="Sync from HeyGen"
+            className="flex items-center justify-center w-7 h-7 rounded-full border border-border text-muted hover:border-blue hover:text-blue transition-all disabled:opacity-40"
+          >
+            <svg
+              className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+          <button
+            onClick={onNew}
+            className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full transition-all border ${
+              selectedId === "new"
+                ? "bg-blue text-white border-blue"
+                : "border-border text-muted hover:border-blue hover:text-blue"
+            }`}
+          >
+            <span aria-hidden>+</span> New
+          </button>
+        </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
@@ -47,7 +72,7 @@ export default function BriefSidebar({ briefs, selectedId, onSelect, onNew }: Pr
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 onClick={() => onSelect(brief.id)}
-                className={`w-full text-left px-3 py-3 rounded-xl transition-all group ${
+                className={`relative w-full text-left px-3 py-3 rounded-xl transition-all group ${
                   isSelected
                     ? "bg-blue/8 border border-blue/20"
                     : "hover:bg-gray-50 border border-transparent"
@@ -65,7 +90,7 @@ export default function BriefSidebar({ briefs, selectedId, onSelect, onNew }: Pr
                       </span>
                       <span className="text-border">·</span>
                       <span className="text-xs text-muted truncate">
-                        {brief.language}
+                        {brief.videos.length > 1 ? "Multiple" : brief.language}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -85,9 +110,7 @@ export default function BriefSidebar({ briefs, selectedId, onSelect, onNew }: Pr
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-muted flex-shrink-0 pt-0.5">
-                    {brief.createdAt}
-                  </span>
+                  <span className="text-xs text-muted flex-shrink-0 pt-0.5">{brief.createdAt}</span>
                 </div>
               </motion.button>
             );

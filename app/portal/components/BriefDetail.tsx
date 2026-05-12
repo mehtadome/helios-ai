@@ -31,6 +31,22 @@ function VideoPlaceholder({
     );
   }
 
+  if (status === "failed") {
+    return (
+      <div className="w-full aspect-video rounded-2xl bg-gray-50 border border-red-100 flex flex-col items-center justify-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
+          <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-semibold text-foreground">Rendering failed</p>
+          <p className="text-xs text-muted mt-1">{language} · HeyGen returned a failed status</p>
+        </div>
+      </div>
+    );
+  }
+
   if (status === "rendering") {
     return (
       <div className="relative w-full aspect-video rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center gap-4 overflow-hidden">
@@ -46,7 +62,6 @@ function VideoPlaceholder({
         <div className="w-12 h-12 rounded-full border-2 border-blue border-t-transparent animate-spin" />
         <div className="text-center">
           <p className="text-sm font-semibold text-white">Rendering {language}</p>
-          <p className="text-xs text-white/50 mt-1">This may take 60–90 seconds</p>
         </div>
       </div>
     );
@@ -115,32 +130,53 @@ function VideoPlaceholder({
 // Brief detail
 // ---------------------------------------------------------------------------
 
-export default function BriefDetail({ brief }: { brief: Brief }) {
+export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelete?: (id: string) => void }) {
   const [activeLanguage, setActiveLanguage] = useState(brief.videos[0]?.language ?? brief.language);
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [downloadTarget, setDownloadTarget] = useState<{ language: string; url: string | null } | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const activeVideo = brief.videos.find((v) => v.language === activeLanguage) ?? brief.videos[0];
   const hasSections = Object.keys(brief.sections).length > 0;
 
   return (
-    <motion.div
-      key={brief.id}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className="max-w-3xl mx-auto px-8 py-10"
-    >
+    <>
+      <motion.div
+        key={brief.id}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="max-w-3xl mx-auto px-8 py-10"
+      >
+      {/* Failed banner */}
+      {brief.status === "failed" && (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+          <p className="text-sm font-semibold text-red-700">Generation failed</p>
+          <p className="text-xs text-red-600 mt-1 leading-relaxed">
+            HeyGen returned a failed status for this job. Submit a new brief to try again.
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="text-xs font-semibold bg-gray-100 text-foreground px-2.5 py-1 rounded-full">
               {brief.role}
             </span>
-            <span className="text-xs font-semibold bg-blue/10 text-blue px-2.5 py-1 rounded-full">
-              {brief.language}
-            </span>
+            {brief.videos.length > 0
+              ? brief.videos.map((v) => (
+                  <span key={v.language} className="text-xs font-semibold bg-blue/10 text-blue px-2.5 py-1 rounded-full">
+                    {v.language}
+                  </span>
+                ))
+              : (
+                  <span className="text-xs font-semibold bg-blue/10 text-blue px-2.5 py-1 rounded-full">
+                    {brief.language}
+                  </span>
+                )
+            }
             {brief.status === "completed" && (
               <span className="text-xs font-semibold bg-green-50 text-green-600 px-2.5 py-1 rounded-full flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
@@ -153,9 +189,22 @@ export default function BriefDetail({ brief }: { brief: Brief }) {
                 Rendering
               </span>
             )}
+            {brief.status === "scripting" && (
+              <span className="text-xs font-semibold bg-yellow-50 text-yellow-600 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse inline-block" />
+                Scripting
+              </span>
+            )}
+            {brief.status === "failed" && (
+              <span className="text-xs font-semibold bg-red-50 text-red-600 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
+                Failed
+              </span>
+            )}
           </div>
           <h1 className="text-xl font-black text-foreground tracking-tight">
-            {brief.role} Brief — {brief.language}
+            {brief.role} Brief
+            {brief.videos.length === 1 ? ` — ${brief.language}` : brief.videos.length > 1 ? ` — ${brief.videos.length} languages` : ""}
           </h1>
           <p className="text-xs text-muted mt-1">Submitted {brief.createdAt}</p>
         </div>
@@ -255,6 +304,20 @@ export default function BriefDetail({ brief }: { brief: Brief }) {
         </p>
       )}
 
+      {/* Delete */}
+      {onDelete && (
+        <div className="mt-8 pt-6 border-t border-border flex justify-end">
+          <button
+            type="button"
+            onClick={() => setDeleteConfirmOpen(true)}
+            className="text-xs font-semibold bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-xl transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      )}
+      </motion.div>
+
       {/* Download modal */}
       {downloadTarget && (
         <DownloadModal
@@ -263,6 +326,55 @@ export default function BriefDetail({ brief }: { brief: Brief }) {
           onClose={() => setDownloadTarget(null)}
         />
       )}
-    </motion.div>
+
+      {/* Delete confirmation */}
+      <AnimatePresence>
+        {deleteConfirmOpen && onDelete && (
+          <motion.div
+            key="delete-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            onClick={() => setDeleteConfirmOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-white rounded-2xl border border-border shadow-xl overflow-hidden"
+            >
+              <div className="px-5 py-5">
+                <p className="text-sm font-bold text-foreground">Delete this brief?</p>
+                <p className="text-xs text-muted mt-2 leading-relaxed">
+                  This removes the brief from your list. This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex gap-2 px-5 py-4 border-t border-border bg-gray-50">
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmOpen(false)}
+                  className="flex-1 text-xs font-semibold text-foreground px-4 py-2.5 rounded-xl border border-border bg-white hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDelete(brief.id);
+                    setDeleteConfirmOpen(false);
+                  }}
+                  className="flex-1 text-xs font-semibold bg-red-600 text-white hover:bg-red-700 px-4 py-2.5 rounded-xl transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

@@ -5,6 +5,8 @@ export interface DemoBrief {
   role: string;
   languages: string[];
   sections: Record<string, string>;
+  avatar_id?: string;
+  voice_id?: string;
 }
 
 export interface VideoVariant {

@@ -16,18 +16,15 @@ export default function Navbar() {
             <a href="#" className="hover:text-foreground transition-colors">
               Platform
             </a>
-            <a href="#" className="hover:text-foreground transition-colors">
-              Developers
-            </a>
-            <a href="#" className="hover:text-foreground transition-colors">
-              Pricing
+            <a href="#enhancements" className="hover:text-foreground transition-colors">
+              Enhancements
             </a>
           </div>
 
-          <button className="flex items-center gap-1.5 bg-foreground text-white text-sm font-semibold px-4 py-2 rounded-full hover:bg-black/80 transition-colors">
+          <a href="/portal" className="flex items-center gap-1.5 bg-foreground text-white text-sm font-semibold px-4 py-2 rounded-full hover:bg-black/80 transition-colors">
             Sign in
             <span aria-hidden>→</span>
-          </button>
+          </a>
         </nav>
       </div>
     </header>
