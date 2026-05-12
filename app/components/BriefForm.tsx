@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Brief, DemoBrief } from "@/app/types";
 import {
@@ -38,7 +38,11 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
   const [languages, setLanguages] = useState<string[]>(["English"]);
   const [sections, setSections] = useState<Partial<Record<SectionKey, string>>>({});
   const [status, setStatus] = useState<Status>("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [retryAfter, setRetryAfter] = useState(0);
   const [demoOpen, setDemoOpen] = useState(false);
+  // Step 3 — code-level lockout: blocks concurrent submits even if the UI guard fires late
+  const submitting = useRef(false);
 
   const isValid =
     languages.length > 0 &&
@@ -62,68 +66,112 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!isValid) return;
+    // Step 3 — session-level lockout: ignore the submit if already in flight
+    if (!isValid || submitting.current) return;
+    submitting.current = true;
+    setErrorMessage(null);
+    setRetryAfter(0);
     setStatus("scripting");
 
-    // Submit to HeyGen
-    let jobId: string;
     try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sections, role, languages }),
-      });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error ?? "Generation failed");
-      jobId = data.jobId;
-    } catch (err) {
-      setStatus("error");
-      console.error("[BriefForm] generate error:", err);
-      return;
-    }
-
-    setStatus("rendering");
-
-    // Poll until complete or failed
-    const languagesParam = encodeURIComponent(JSON.stringify(languages));
-    let video_url: string | null = null;
-
-    while (true) {
-      await delay(4000);
+      // Submit to HeyGen
+      let jobId: string;
       try {
-        const res = await fetch(`/api/status/${jobId}?languages=${languagesParam}`);
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sections, role, languages }),
+        });
         const data = await res.json();
-        if (!data.ok) break;
-        if (data.status === "failed") { setStatus("error"); return; }
-        if (data.status === "completed") { video_url = data.video_url; break; }
-      } catch {
-        break;
+        if (!data.ok) {
+          // Step 4 — capture retryAfter for rate-limit countdown
+          if (data.error === "rate_limited") setRetryAfter(data.retryAfter ?? 60);
+          throw new Error(data.error ?? "Generation failed");
+        }
+        jobId = data.jobId;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Generation failed";
+        setErrorMessage(msg);
+        setStatus("error");
+        return;
       }
-    }
 
-    setStatus("complete");
+      setStatus("rendering");
 
-    if (onBriefSubmitted) {
-      const newBrief: Brief = {
-        id: `brief-${Date.now()}`,
-        role,
-        language: languages[0],
-        status: "completed",
-        createdAt: "Just now",
-        sections: sections as Record<string, string>,
-        videos: languages.map((lang) => ({
-          language: lang,
-          url: lang === languages[0] ? video_url : null,
-          video_url: lang === languages[0] ? video_url : null,
-          blob_url: null,
-          status: "completed" as const,
-        })),
-      };
-      onBriefSubmitted(newBrief);
+      // Poll until complete or failed
+      const languagesParam = encodeURIComponent(JSON.stringify(languages));
+      let video_url: string | null = null;
+
+      const MAX_POLLS = 75; // 5 min at 4s intervals — well beyond HeyGen's generation window
+      for (let poll = 0; poll < MAX_POLLS; poll++) {
+        await delay(4000);
+        try {
+          const res = await fetch(`/api/status/${jobId}?languages=${languagesParam}&dispatch=1`);
+          const data = await res.json();
+          if (!data.ok) break;
+          if (data.status === "failed") {
+            setErrorMessage("Video generation failed on HeyGen's side.");
+            setStatus("error");
+            return;
+          }
+          if (data.status === "completed") { video_url = data.video_url; break; }
+        } catch {
+          break;
+        }
+      }
+
+      if (!video_url) {
+        setErrorMessage("Generation timed out — HeyGen job did not resolve within 5 minutes.");
+        setStatus("error");
+        return;
+      }
+
+      setStatus("complete");
+
+      if (onBriefSubmitted) {
+        const newBrief: Brief = {
+          id: `brief-${Date.now()}`,
+          role,
+          language: languages[0],
+          status: "completed",
+          createdAt: "Just now",
+          sections: sections as Record<string, string>,
+          videos: languages.map((lang) => ({
+            language: lang,
+            url: lang === languages[0] ? video_url : null,
+            video_url: lang === languages[0] ? video_url : null,
+            blob_url: null,
+            status: "completed" as const,
+          })),
+        };
+        onBriefSubmitted(newBrief);
+      }
+    } finally {
+      submitting.current = false;
     }
   };
 
-  const handleReset = () => setStatus("idle");
+  const handleReset = () => {
+    setStatus("idle");
+    setErrorMessage(null);
+    setRetryAfter(0);
+  };
+
+  // Step 4 — countdown timer: auto-resets to idle when retryAfter expires
+  useEffect(() => {
+    if (retryAfter <= 0) return;
+    const timer = setTimeout(() => {
+      setRetryAfter((n) => {
+        if (n <= 1) {
+          setStatus("idle");
+          setErrorMessage(null);
+          return 0;
+        }
+        return n - 1;
+      });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [retryAfter]);
 
   const getStepState = (stepId: string) => {
     if (status === "scripting" && stepId === "scripting") return "active";
@@ -353,7 +401,12 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
                   Helios AI Studio launch brief
                 </p>
               </div>
-              {status !== "complete" ? (
+              {status === "error" ? (
+                <span className="flex items-center gap-1.5 text-xs font-medium text-red-500">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                  {errorMessage === "rate_limited" ? "Rate limited" : "Error"}
+                </span>
+              ) : status !== "complete" ? (
                 <span className="flex items-center gap-1.5 text-xs font-medium text-blue">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue animate-pulse" />
                   Processing
@@ -366,61 +419,88 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
               )}
             </div>
 
-            {/* Steps */}
-            <div className="px-6 py-6 space-y-4">
-              {STATUS_STEPS.map((step, i) => {
-                const state = getStepState(step.id);
-                return (
-                  <motion.div
-                    key={step.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.12 }}
-                    className="flex items-center gap-4"
-                  >
-                    <div className="flex-shrink-0">
-                      {state === "done" && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="w-8 h-8 rounded-full bg-blue flex items-center justify-center"
-                        >
-                          <svg
-                            className="w-4 h-4 text-white"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2.5}
+            {/* Steps 3.5 + 4 — error banner replaces steps when generation fails */}
+            {status === "error" ? (
+              <div className="px-6 py-6">
+                <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+                  <p className="text-sm font-semibold text-red-700 mb-1">
+                    {errorMessage === "rate_limited" ? "Too many requests" : "Generation failed"}
+                  </p>
+                  <p className="text-xs text-red-600 leading-relaxed">
+                    {errorMessage === "rate_limited" && retryAfter > 0
+                      ? `HeyGen rate limit hit — retrying automatically in ${retryAfter}s…`
+                      : errorMessage === "rate_limited"
+                      ? "Rate limit cleared. You can try again."
+                      : (errorMessage ?? "An unexpected error occurred.")}
+                  </p>
+                </div>
+                {(errorMessage !== "rate_limited" || retryAfter === 0) && (
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      onClick={handleReset}
+                      className="text-xs font-medium text-blue hover:text-blue-dark transition-colors"
+                    >
+                      ← Try again
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="px-6 py-6 space-y-4">
+                {STATUS_STEPS.map((step, i) => {
+                  const state = getStepState(step.id);
+                  return (
+                    <motion.div
+                      key={step.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.12 }}
+                      className="flex items-center gap-4"
+                    >
+                      <div className="flex-shrink-0">
+                        {state === "done" && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="w-8 h-8 rounded-full bg-blue flex items-center justify-center"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        </motion.div>
-                      )}
-                      {state === "active" && (
-                        <div className="w-8 h-8 rounded-full border-2 border-blue border-t-transparent animate-spin" />
-                      )}
-                      {state === "pending" && (
-                        <div className="w-8 h-8 rounded-full border-2 border-border" />
-                      )}
-                    </div>
-                    <div>
-                      <p
-                        className={`text-sm font-semibold ${
-                          state === "pending" ? "text-muted" : "text-foreground"
-                        }`}
-                      >
-                        {step.label}
-                      </p>
-                      <p className="text-xs text-muted">{step.sublabel}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+                            <svg
+                              className="w-4 h-4 text-white"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2.5}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          </motion.div>
+                        )}
+                        {state === "active" && (
+                          <div className="w-8 h-8 rounded-full border-2 border-blue border-t-transparent animate-spin" />
+                        )}
+                        {state === "pending" && (
+                          <div className="w-8 h-8 rounded-full border-2 border-border" />
+                        )}
+                      </div>
+                      <div>
+                        <p
+                          className={`text-sm font-semibold ${
+                            state === "pending" ? "text-muted" : "text-foreground"
+                          }`}
+                        >
+                          {step.label}
+                        </p>
+                        <p className="text-xs text-muted">{step.sublabel}</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Reset button (standalone mode only) */}
             {status === "complete" && !onBriefSubmitted && (

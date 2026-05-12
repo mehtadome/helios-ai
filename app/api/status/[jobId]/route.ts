@@ -6,6 +6,7 @@ import type { BriefStatus } from "@/app/types";
 function mapStatus(heygenStatus: string): BriefStatus {
   if (heygenStatus === "completed") return "completed";
   if (heygenStatus === "failed")    return "failed";
+  if (heygenStatus === "thinking")  return "scripting";
   return "rendering";
 }
 
@@ -79,11 +80,20 @@ export async function GET(
     return NextResponse.json({ ok: true, status: "rendering" as BriefStatus, video_url: null });
   }
 
-  // Step 3 — master complete. Fan out translation jobs for additional languages.
-  // Languages are passed as a query param from the form polling loop.
+  // Step 3 — master complete. Fan out translations only when ?dispatch=1 is present.
+  // This is the idempotency guard: only the initial BriefForm poll loop sends dispatch=1.
+  // Any subsequent status check (BriefDetail, webhook handler, etc.) omits it,
+  // preventing duplicate translation batches being sent to HeyGen for the same job.
+  const shouldDispatch = req.nextUrl.searchParams.get("dispatch") === "1";
   const languagesParam = req.nextUrl.searchParams.get("languages");
-  const allLanguages: string[] = languagesParam ? JSON.parse(languagesParam) : [];
-  const translationLanguages = allLanguages.filter((l) => l !== "English");
+  let allLanguages: string[] = [];
+  try {
+    if (languagesParam) allLanguages = JSON.parse(languagesParam);
+  } catch { /* malformed param — skip translation dispatch */ }
+  const primaryLanguage = allLanguages.includes("English") ? "English" : allLanguages[0];
+  const translationLanguages = shouldDispatch
+    ? allLanguages.filter((l) => l !== primaryLanguage)
+    : [];
 
   const translationIds: string[] = [];
 
