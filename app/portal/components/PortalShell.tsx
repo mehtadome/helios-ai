@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Brief } from "@/app/types";
 import BriefSidebar from "./BriefSidebar";
@@ -14,17 +14,39 @@ export default function PortalShell() {
   const [selectedId, setSelectedId] = useState<string>("new");
   const [refreshing, setRefreshing] = useState(false);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const deletedIdsRef = useRef<Set<string>>(new Set());
   const [redisReady, setRedisReady] = useState(false);
 
-  // Load persisted briefs from Redis on mount
+  // On mount: load Redis briefs, then pull HeyGen and merge.
+  // Deleted IDs (tracked via ref so async callbacks see the latest value) are excluded from the HeyGen pull.
   useEffect(() => {
-    fetch("/api/briefs")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.ok && data.briefs.length > 0) setBriefs(data.briefs);
-      })
-      .catch(() => { /* fall back to INITIAL_BRIEFS */ })
-      .finally(() => setRedisReady(true));
+    async function init() {
+      let redisBriefs: Brief[] = [];
+      try {
+        const data = await fetch("/api/briefs").then((r) => r.json());
+        if (data.ok && data.briefs.length > 0) redisBriefs = data.briefs;
+      } catch { /* fall back */ }
+
+      let heygenBriefs: Brief[] = [];
+      try {
+        const data = await fetch("/api/videos").then((r) => r.json());
+        if (data.ok) {
+          heygenBriefs = (data.briefs as Brief[]).filter(
+            (b) => !deletedIdsRef.current.has(b.id)
+          );
+        }
+      } catch { /* non-fatal */ }
+
+      // Merge: Redis brief-* (with sections) take precedence; HeyGen entries fill the rest.
+      const merged = [
+        ...redisBriefs,
+        ...heygenBriefs.filter((b) => !redisBriefs.some((r) => r.id === b.id)),
+      ];
+
+      if (merged.length > 0) setBriefs(merged);
+      setRedisReady(true);
+    }
+    init();
   }, []);
 
   // Persist briefs to Redis on every change (after initial load).
@@ -74,7 +96,7 @@ export default function PortalShell() {
       // HeyGen's list API may lag behind dashboard deletions, so we maintain a local blocklist.
       setBriefs((prev) => {
         const formBriefs = prev.filter((b) => !b.id.startsWith("heygen-"));
-        const fresh = (data.briefs as Brief[]).filter((b) => !deletedIds.has(b.id));
+        const fresh = (data.briefs as Brief[]).filter((b) => !deletedIdsRef.current.has(b.id));
         return [...formBriefs, ...fresh];
       });
     } catch (err) {
@@ -123,7 +145,9 @@ export default function PortalShell() {
               <BriefDetail
                 brief={selectedBrief}
                 onDelete={(id) => {
-                  setDeletedIds((prev) => new Set([...prev, id]));
+                  const next = new Set([...deletedIdsRef.current, id]);
+                  deletedIdsRef.current = next;
+                  setDeletedIds(next);
                   setBriefs((prev) => prev.filter((b) => b.id !== id));
                   setSelectedId("new");
                 }}
