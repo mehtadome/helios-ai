@@ -109,7 +109,9 @@ export async function POST(req: NextRequest) {
   const payload = {
     prompt:      buildPrompt(sections, role, primaryLanguage),
     avatar_id:   avatar_id ?? AVATAR_ID,
-    voice_id:    voice_id  ?? VOICE_IDS[primaryLanguage],
+    // User-selectable voices are English-only. For a non-English primary, always use the
+    // language-matched voice — otherwise HeyGen generates an English master regardless of the prompt.
+    voice_id:    primaryLanguage === "English" ? (voice_id ?? VOICE_IDS["English"]) : VOICE_IDS[primaryLanguage],
     orientation: "landscape",
     files:       buildFiles(sections, baseUrl),
     callback_url: `${baseUrl}/api/webhook`,
