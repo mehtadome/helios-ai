@@ -7,7 +7,7 @@ const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Helios AI Studio — Video Generator",
   description:
-    "Turn your sales brief into multilingual videos in under 24 hours.",
+    "Turn your sales brief into multilingual videos in under 30 minutes.",
 };
 
 export default function RootLayout({

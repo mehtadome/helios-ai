@@ -62,8 +62,8 @@ export default function HeroSection() {
             className="text-base md:text-lg text-muted leading-relaxed max-w-md"
           >
             From a structured English brief to multilingual MP4 — AE, SDR, and
-            Partner Manager variants. All five languages simultaneously. Brief
-            to video in under 24 hours.
+            Partner Manager variants. All six languages simultaneously. Brief
+            to video in under 30 minutes.
           </motion.p>
 
           <motion.div
@@ -93,12 +93,14 @@ export default function HeroSection() {
             initial="hidden"
             animate="show"
             custom={0.62}
-            className="flex items-center gap-6 pt-2"
+            className="flex flex-wrap items-center gap-x-6 gap-y-4 pt-2"
           >
             {[
-              { value: "24h", label: "Brief to MP4" },
-              { value: "5", label: "Languages" },
+              { value: "30min", label: "Brief to MP4" },
+              { value: "6", label: "Languages" },
               { value: "3", label: "Role variants" },
+              { value: "6", label: "Personas" },
+              { value: "6", label: "Voices" },
             ].map(({ value, label }) => (
               <div key={label} className="flex flex-col">
                 <span className="text-2xl font-black text-foreground">
