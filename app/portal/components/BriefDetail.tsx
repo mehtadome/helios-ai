@@ -62,7 +62,6 @@ function VideoPlaceholder({
         <div className="w-12 h-12 rounded-full border-2 border-blue border-t-transparent animate-spin" />
         <div className="text-center">
           <p className="text-sm font-semibold text-white">Rendering {language}</p>
-          <p className="text-xs text-white/50 mt-1">This may take 60–90 seconds</p>
         </div>
       </div>
     );

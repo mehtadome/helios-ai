@@ -6,6 +6,7 @@ import type { Brief } from "@/app/types";
 import BriefSidebar from "./BriefSidebar";
 import BriefDetail from "./BriefDetail";
 import BriefForm from "@/app/components/BriefForm";
+import AccountPopover from "./AccountPopover";
 import { INITIAL_BRIEFS } from "@/app/lib/mock-data";
 
 export default function PortalShell() {
@@ -96,7 +97,10 @@ export default function PortalShell() {
         refreshing={refreshing}
       />
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto relative">
+        <div className="absolute top-4 right-4 z-40">
+          <AccountPopover />
+        </div>
         <AnimatePresence mode="wait">
           {selectedId === "new" ? (
             <motion.div
