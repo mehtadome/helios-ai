@@ -50,11 +50,6 @@ export default function PortalShell() {
         onNew={() => setSelectedId("new")}
         onRefresh={handleRefresh}
         refreshing={refreshing}
-        onDelete={(id) => {
-          setDeletedIds((prev) => new Set([...prev, id]));
-          setBriefs((prev) => prev.filter((b) => b.id !== id));
-          if (selectedId === id) setSelectedId("new");
-        }}
       />
 
       <main className="flex-1 overflow-y-auto">
@@ -77,7 +72,14 @@ export default function PortalShell() {
               exit={{ opacity: 0, x: -16 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
             >
-              <BriefDetail brief={selectedBrief} />
+              <BriefDetail
+                brief={selectedBrief}
+                onDelete={(id) => {
+                  setDeletedIds((prev) => new Set([...prev, id]));
+                  setBriefs((prev) => prev.filter((b) => b.id !== id));
+                  setSelectedId("new");
+                }}
+              />
             </motion.div>
           ) : null}
         </AnimatePresence>

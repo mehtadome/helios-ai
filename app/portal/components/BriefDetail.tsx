@@ -115,22 +115,24 @@ function VideoPlaceholder({
 // Brief detail
 // ---------------------------------------------------------------------------
 
-export default function BriefDetail({ brief }: { brief: Brief }) {
+export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelete?: (id: string) => void }) {
   const [activeLanguage, setActiveLanguage] = useState(brief.videos[0]?.language ?? brief.language);
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [downloadTarget, setDownloadTarget] = useState<{ language: string; url: string | null } | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const activeVideo = brief.videos.find((v) => v.language === activeLanguage) ?? brief.videos[0];
   const hasSections = Object.keys(brief.sections).length > 0;
 
   return (
-    <motion.div
-      key={brief.id}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className="max-w-3xl mx-auto px-8 py-10"
-    >
+    <>
+      <motion.div
+        key={brief.id}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="max-w-3xl mx-auto px-8 py-10"
+      >
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
@@ -255,6 +257,20 @@ export default function BriefDetail({ brief }: { brief: Brief }) {
         </p>
       )}
 
+      {/* Delete */}
+      {onDelete && (
+        <div className="mt-8 pt-6 border-t border-border flex justify-end">
+          <button
+            type="button"
+            onClick={() => setDeleteConfirmOpen(true)}
+            className="text-xs font-semibold bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-xl transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      )}
+      </motion.div>
+
       {/* Download modal */}
       {downloadTarget && (
         <DownloadModal
@@ -263,6 +279,55 @@ export default function BriefDetail({ brief }: { brief: Brief }) {
           onClose={() => setDownloadTarget(null)}
         />
       )}
-    </motion.div>
+
+      {/* Delete confirmation */}
+      <AnimatePresence>
+        {deleteConfirmOpen && onDelete && (
+          <motion.div
+            key="delete-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            onClick={() => setDeleteConfirmOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-white rounded-2xl border border-border shadow-xl overflow-hidden"
+            >
+              <div className="px-5 py-5">
+                <p className="text-sm font-bold text-foreground">Delete this brief?</p>
+                <p className="text-xs text-muted mt-2 leading-relaxed">
+                  This removes the brief from your list. This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex gap-2 px-5 py-4 border-t border-border bg-gray-50">
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmOpen(false)}
+                  className="flex-1 text-xs font-semibold text-foreground px-4 py-2.5 rounded-xl border border-border bg-white hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDelete(brief.id);
+                    setDeleteConfirmOpen(false);
+                  }}
+                  className="flex-1 text-xs font-semibold bg-red-600 text-white hover:bg-red-700 px-4 py-2.5 rounded-xl transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
