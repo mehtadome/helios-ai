@@ -90,7 +90,7 @@ export default function BriefSidebar({ briefs, selectedId, onSelect, onNew, onRe
                       </span>
                       <span className="text-border">·</span>
                       <span className="text-xs text-muted truncate">
-                        {brief.language}
+                        {brief.videos.length > 1 ? "Multiple" : brief.language}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">

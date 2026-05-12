@@ -162,13 +162,22 @@ export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelet
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="text-xs font-semibold bg-gray-100 text-foreground px-2.5 py-1 rounded-full">
               {brief.role}
             </span>
-            <span className="text-xs font-semibold bg-blue/10 text-blue px-2.5 py-1 rounded-full">
-              {brief.language}
-            </span>
+            {brief.videos.length > 0
+              ? brief.videos.map((v) => (
+                  <span key={v.language} className="text-xs font-semibold bg-blue/10 text-blue px-2.5 py-1 rounded-full">
+                    {v.language}
+                  </span>
+                ))
+              : (
+                  <span className="text-xs font-semibold bg-blue/10 text-blue px-2.5 py-1 rounded-full">
+                    {brief.language}
+                  </span>
+                )
+            }
             {brief.status === "completed" && (
               <span className="text-xs font-semibold bg-green-50 text-green-600 px-2.5 py-1 rounded-full flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
@@ -181,9 +190,22 @@ export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelet
                 Rendering
               </span>
             )}
+            {brief.status === "scripting" && (
+              <span className="text-xs font-semibold bg-yellow-50 text-yellow-600 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse inline-block" />
+                Scripting
+              </span>
+            )}
+            {brief.status === "failed" && (
+              <span className="text-xs font-semibold bg-red-50 text-red-600 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
+                Failed
+              </span>
+            )}
           </div>
           <h1 className="text-xl font-black text-foreground tracking-tight">
-            {brief.role} Brief — {brief.language}
+            {brief.role} Brief
+            {brief.videos.length === 1 ? ` — ${brief.language}` : brief.videos.length > 1 ? ` — ${brief.videos.length} languages` : ""}
           </h1>
           <p className="text-xs text-muted mt-1">Submitted {brief.createdAt}</p>
         </div>
