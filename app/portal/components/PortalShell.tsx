@@ -11,10 +11,30 @@ import { INITIAL_BRIEFS } from "@/app/lib/mock-data";
 export default function PortalShell() {
   const [briefs, setBriefs] = useState<Brief[]>(INITIAL_BRIEFS);
   const [selectedId, setSelectedId] = useState<string>("new");
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleBriefSubmitted = (brief: Brief) => {
     setBriefs((prev) => [brief, ...prev]);
     setSelectedId(brief.id);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/videos");
+      const data = await res.json();
+      if (!data.ok) return;
+      // Upsert by ID — existing briefs (with full metadata) take priority over HeyGen-fetched ones
+      setBriefs((prev) => {
+        const existingIds = new Set(prev.map((b) => b.id));
+        const newOnes = (data.briefs as Brief[]).filter((b) => !existingIds.has(b.id));
+        return [...prev, ...newOnes];
+      });
+    } catch (err) {
+      console.error("[refresh] failed:", err);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const selectedBrief = briefs.find((b) => b.id === selectedId);
@@ -26,6 +46,8 @@ export default function PortalShell() {
         selectedId={selectedId}
         onSelect={setSelectedId}
         onNew={() => setSelectedId("new")}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
       />
 
       <main className="flex-1 overflow-y-auto">

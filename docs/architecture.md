@@ -77,6 +77,8 @@ Neon Postgres  →  jobs, briefs, users, orgs tables
 - HeyGen API key lives server-side in Vercel env vars — never per-user, always the platform key
 - Multi-tenant future: per-org HeyGen API keys stored in Vercel env or a secrets manager (one key per customer account)
 
+**Job persistence note:** Postgres serves as the single source of truth for all jobs — whether submitted through the POC form or created directly in the HeyGen dashboard. The webhook handler writes every completed job to Postgres on receipt, so the portal always reflects the full HeyGen video library without requiring a manual sync or N+1 list + fetch pattern.
+
 **Postgres schema (core tables):**
 ```sql
 organizations (id, name, heygen_api_key_ref, created_at)
