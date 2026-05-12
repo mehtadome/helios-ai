@@ -473,7 +473,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
               </motion.button>
               <p className="text-center text-xs text-muted mt-3">
                 {isValid
-                  ? `Generating ${languages.length} video${languages.length > 1 ? "s" : ""} — estimated 60–90 seconds`
+                  ? `Generating ${languages.length} video${languages.length > 1 ? "s" : ""}`
                   : "Fill in all sections to enable generation"}
               </p>
             </motion.div>

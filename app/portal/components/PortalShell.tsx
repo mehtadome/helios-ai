@@ -35,7 +35,7 @@ export default function PortalShell() {
   }, [briefs, redisReady]);
 
   function saveBriefs(current: Brief[]) {
-    const toSave = current.filter((b) => !b.id.startsWith("brief-demo-"));
+    const toSave = current.filter((b) => !b.id.startsWith("brief-demo-") && !b.id.startsWith("heygen-"));
     if (toSave.length === 0) return;
     fetch("/api/briefs", {
       method: "PUT",
