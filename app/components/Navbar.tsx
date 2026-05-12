@@ -16,6 +16,9 @@ export default function Navbar() {
             <a href="#" className="hover:text-foreground transition-colors">
               Platform
             </a>
+            <a href="#features" className="hover:text-foreground transition-colors">
+              Features
+            </a>
             <a href="#enhancements" className="hover:text-foreground transition-colors">
               Enhancements
             </a>
