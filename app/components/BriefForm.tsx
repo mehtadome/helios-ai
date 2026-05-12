@@ -42,7 +42,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryAfter, setRetryAfter] = useState(0);
   const [demoOpen, setDemoOpen] = useState(false);
-  // Step 3 — code-level lockout: blocks concurrent submits even if the UI guard fires late
+  const [elapsed, setElapsed] = useState(0);
   const submitting = useRef(false);
 
   const isValid =
@@ -124,7 +124,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
       const languagesParam = encodeURIComponent(JSON.stringify(languages));
       let video_url: string | null = null;
 
-      const MAX_POLLS = 300; // 20 min safety net — reduce once real generation times are known
+      const MAX_POLLS = 900; // 60 min hard ceiling — rely on HeyGen's failed signal, not this cap
       for (let poll = 0; poll < MAX_POLLS; poll++) {
         await delay(4000);
         try {
@@ -143,7 +143,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
       }
 
       if (!video_url) {
-        setErrorMessage("Generation timed out — HeyGen job did not resolve within 20 minutes.");
+        setErrorMessage("Generation timed out — HeyGen did not return a completed or failed status within 60 minutes.");
         setStatus("error");
         return;
       }
@@ -176,6 +176,16 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
     setErrorMessage(null);
     setRetryAfter(0);
   };
+
+  // Elapsed timer — runs while generating, resets on idle/error/complete
+  useEffect(() => {
+    if (status !== "scripting" && status !== "rendering") {
+      setElapsed(0);
+      return;
+    }
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [status]);
 
   // Step 4 — countdown timer: auto-resets to idle when retryAfter expires
   useEffect(() => {
@@ -429,7 +439,11 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
               ) : status !== "complete" ? (
                 <span className="flex items-center gap-1.5 text-xs font-medium text-blue">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue animate-pulse" />
-                  Processing
+                  {elapsed > 0
+                    ? elapsed >= 60
+                      ? `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`
+                      : `${elapsed}s`
+                    : "Processing"}
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5 text-xs font-medium text-green-600">

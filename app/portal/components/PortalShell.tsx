@@ -30,24 +30,37 @@ export default function PortalShell() {
   // Exclude brief-demo-* so mock seed data never pollutes Redis.
   useEffect(() => {
     if (!redisReady) return;
-    const toSave = briefs.filter((b) => !b.id.startsWith("brief-demo-"));
+    saveBriefs(briefs);
+  }, [briefs, redisReady]);
+
+  function saveBriefs(current: Brief[]) {
+    const toSave = current.filter((b) => !b.id.startsWith("brief-demo-"));
     if (toSave.length === 0) return;
     fetch("/api/briefs", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(toSave),
     }).catch((err) => console.error("[briefs] persist failed:", err));
-  }, [briefs, redisReady]);
+  }
 
-  // Called the moment generation starts — adds to sidebar and navigates to it.
+  // Called the moment generation starts — adds to sidebar, selects it, and immediately persists
+  // (can't wait for the effect since redisReady may still be false at this point).
   const handleBriefAdded = (brief: Brief) => {
-    setBriefs((prev) => [brief, ...prev]);
+    setBriefs((prev) => {
+      const next = [brief, ...prev];
+      saveBriefs(next);
+      return next;
+    });
     setSelectedId(brief.id);
   };
 
-  // Called when generation completes — updates the existing entry in-place, no navigation.
+  // Called when generation completes — updates in-place without changing navigation.
   const handleBriefCompleted = (brief: Brief) => {
-    setBriefs((prev) => prev.map((b) => b.id === brief.id ? brief : b));
+    setBriefs((prev) => {
+      const next = prev.map((b) => b.id === brief.id ? brief : b);
+      saveBriefs(next);
+      return next;
+    });
   };
 
   const handleRefresh = async () => {

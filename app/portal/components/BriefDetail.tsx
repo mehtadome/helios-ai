@@ -31,6 +31,22 @@ function VideoPlaceholder({
     );
   }
 
+  if (status === "failed") {
+    return (
+      <div className="w-full aspect-video rounded-2xl bg-gray-50 border border-red-100 flex flex-col items-center justify-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
+          <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-semibold text-foreground">Rendering failed</p>
+          <p className="text-xs text-muted mt-1">{language} · HeyGen returned a failed status</p>
+        </div>
+      </div>
+    );
+  }
+
   if (status === "rendering") {
     return (
       <div className="relative w-full aspect-video rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center gap-4 overflow-hidden">
@@ -133,6 +149,16 @@ export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelet
         transition={{ duration: 0.35, ease: "easeOut" }}
         className="max-w-3xl mx-auto px-8 py-10"
       >
+      {/* Failed banner */}
+      {brief.status === "failed" && (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+          <p className="text-sm font-semibold text-red-700">Generation failed</p>
+          <p className="text-xs text-red-600 mt-1 leading-relaxed">
+            HeyGen returned a failed status for this job. Submit a new brief to try again.
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
