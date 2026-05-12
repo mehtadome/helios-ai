@@ -61,4 +61,4 @@ The demo must include a simple web UI — not CLI only. Minimum: a form (brief i
 
 ## Key Contact
 
-Questions about the HeyGen API: chloe.yang@heygen.com / will.ji@heygen.com
+Questions about the HeyGen API: reach out to your HeyGen account team.

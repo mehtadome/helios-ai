@@ -166,7 +166,7 @@ Instead of generating each language from scratch, generate in English then trans
 
 ## Key Gaps / Things to Verify
 
-1. **Rate limits** — not documented publicly. Ask chloe.yang@heygen.com or will.ji@heygen.com for actual numbers before designing the job queue.
+1. **Rate limits** — not documented publicly. Confirm actual numbers with your HeyGen account team before designing the job queue.
 2. **Composition control** — the agent makes scene/B-roll decisions from your prompt + attachments. There is no explicit scene definition API. Leverage is prompt engineering + attached reference images.
 3. **Specific avatar/voice IDs** — call `/v3/avatars` and `/v3/voices` with your API key to see what's actually available on your account.
 4. **Credit costs per video** — not in the public docs.
