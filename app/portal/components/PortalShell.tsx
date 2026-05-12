@@ -8,31 +8,33 @@ import BriefDetail from "./BriefDetail";
 import BriefForm from "@/app/components/BriefForm";
 import { INITIAL_BRIEFS } from "@/app/lib/mock-data";
 
-const STORAGE_KEY = "helios-briefs";
-
 export default function PortalShell() {
   const [briefs, setBriefs] = useState<Brief[]>(INITIAL_BRIEFS);
   const [selectedId, setSelectedId] = useState<string>("new");
   const [refreshing, setRefreshing] = useState(false);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
-  const [storageReady, setStorageReady] = useState(false);
+  const [redisReady, setRedisReady] = useState(false);
 
-  // Rehydrate from localStorage on mount
+  // Load persisted briefs from Redis on mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setBriefs(JSON.parse(saved));
-    } catch { /* ignore malformed data */ }
-    setStorageReady(true);
+    fetch("/api/briefs")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok && data.briefs.length > 0) setBriefs(data.briefs);
+      })
+      .catch(() => { /* fall back to INITIAL_BRIEFS */ })
+      .finally(() => setRedisReady(true));
   }, []);
 
-  // Persist briefs whenever they change (after initial load)
+  // Persist briefs to Redis on every change (after initial load)
   useEffect(() => {
-    if (!storageReady) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(briefs));
-    } catch { /* ignore quota errors */ }
-  }, [briefs, storageReady]);
+    if (!redisReady) return;
+    fetch("/api/briefs", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(briefs),
+    }).catch((err) => console.error("[briefs] persist failed:", err));
+  }, [briefs, redisReady]);
 
   const handleBriefSubmitted = (brief: Brief) => {
     setBriefs((prev) => [brief, ...prev]);
