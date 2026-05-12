@@ -12,6 +12,7 @@ export default function PortalShell() {
   const [briefs, setBriefs] = useState<Brief[]>(INITIAL_BRIEFS);
   const [selectedId, setSelectedId] = useState<string>("new");
   const [refreshing, setRefreshing] = useState(false);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
   const handleBriefSubmitted = (brief: Brief) => {
     setBriefs((prev) => [brief, ...prev]);
@@ -24,11 +25,12 @@ export default function PortalShell() {
       const res = await fetch("/api/videos");
       const data = await res.json();
       if (!data.ok) return;
-      // Upsert by ID — existing briefs (with full metadata) take priority over HeyGen-fetched ones
+      // Replace all heygen-* briefs with the fresh list, filtering out client-side deleted IDs.
+      // HeyGen's list API may lag behind dashboard deletions, so we maintain a local blocklist.
       setBriefs((prev) => {
-        const existingIds = new Set(prev.map((b) => b.id));
-        const newOnes = (data.briefs as Brief[]).filter((b) => !existingIds.has(b.id));
-        return [...prev, ...newOnes];
+        const formBriefs = prev.filter((b) => !b.id.startsWith("heygen-"));
+        const fresh = (data.briefs as Brief[]).filter((b) => !deletedIds.has(b.id));
+        return [...formBriefs, ...fresh];
       });
     } catch (err) {
       console.error("[refresh] failed:", err);
@@ -48,6 +50,11 @@ export default function PortalShell() {
         onNew={() => setSelectedId("new")}
         onRefresh={handleRefresh}
         refreshing={refreshing}
+        onDelete={(id) => {
+          setDeletedIds((prev) => new Set([...prev, id]));
+          setBriefs((prev) => prev.filter((b) => b.id !== id));
+          if (selectedId === id) setSelectedId("new");
+        }}
       />
 
       <main className="flex-1 overflow-y-auto">

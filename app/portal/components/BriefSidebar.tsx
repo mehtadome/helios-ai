@@ -11,9 +11,10 @@ interface Props {
   onNew: () => void;
   onRefresh: () => void;
   refreshing: boolean;
+  onDelete: (id: string) => void;
 }
 
-export default function BriefSidebar({ briefs, selectedId, onSelect, onNew, onRefresh, refreshing }: Props) {
+export default function BriefSidebar({ briefs, selectedId, onSelect, onNew, onRefresh, refreshing, onDelete }: Props) {
   return (
     <aside className="w-72 flex-shrink-0 border-r border-border flex flex-col h-full">
       <div className="px-4 py-5 border-b border-border flex items-center justify-between">
@@ -67,12 +68,19 @@ export default function BriefSidebar({ briefs, selectedId, onSelect, onNew, onRe
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 onClick={() => onSelect(brief.id)}
-                className={`w-full text-left px-3 py-3 rounded-xl transition-all group ${
+                className={`relative w-full text-left px-3 py-3 rounded-xl transition-all group ${
                   isSelected
                     ? "bg-blue/8 border border-blue/20"
                     : "hover:bg-gray-50 border border-transparent"
                 }`}
               >
+                {/* Hover tooltip — overlays the card to avoid clipping at top/bottom */}
+                <div className="pointer-events-none absolute inset-0 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-150 rounded-xl overflow-hidden">
+                  <div className="w-full h-full bg-gray-900/95 flex flex-col justify-center px-3 py-3">
+                    <p className="text-xs font-semibold text-white">{brief.role}</p>
+                    <p className="text-xs text-white/60 mt-0.5">{brief.language} · {STATUS_CONFIG[brief.status].label}</p>
+                  </div>
+                </div>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1">
@@ -105,9 +113,19 @@ export default function BriefSidebar({ briefs, selectedId, onSelect, onNew, onRe
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-muted flex-shrink-0 pt-0.5">
-                    {brief.createdAt}
-                  </span>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className="text-xs text-muted">{brief.createdAt}</span>
+                    <div
+                      role="button"
+                      onClick={(e) => { e.stopPropagation(); onDelete(brief.id); }}
+                      className="text-white/40 hover:text-red-400 transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+                      title="Remove from list"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </motion.button>
             );

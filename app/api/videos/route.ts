@@ -42,6 +42,7 @@ export async function GET() {
     listData?.data?.videos ?? [];
 
   console.log(`[videos] fetched ${heygenVideos.length} videos from HeyGen`);
+  heygenVideos.forEach((v) => console.log(`[videos]  id: ${v.video_id} | status: ${v.status} | title: ${v.video_title}`));
 
   // For each completed video, fetch the actual URL — N+1 but acceptable at POC scale.
   // At production scale, store video_url in Postgres on webhook receipt instead.
