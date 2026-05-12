@@ -5,19 +5,70 @@ import type { BriefStatus, DemoBrief } from "@/app/types";
 // Full dumps in private/heygen_avatars.json and private/heygen_voices.json.
 // ---------------------------------------------------------------------------
 
-// Adriana BizTalk Front — professional female, front-facing, non-premium
+// Default fallbacks (used by /api/generate when no selection is passed)
 export const AVATAR_ID = "Adriana_BizTalk_Front_public";
 
-// Female voices, one per language. English is primary.
-// Swap any voice_id using private/heygen_voices.json if needed.
+// Non-English voices used for translation fan-out — not user-selectable.
 export const VOICE_IDS: Record<string, string> = {
-  English: "f8c69e517f424cafaecde32dde57096b", // Allison
+  English: "f8c69e517f424cafaecde32dde57096b", // Allison (fallback only)
   French:  "67375f26ab6e44ce8569cea3840ef594", // Gaëlle
   Spanish: "689f48196a9a43c4bbbb67c14fdbb4c6", // Sara Martin
   Chinese: "1b86e7a08ce641c39e530455feb4285b", // Amy
   Italian: "bf04704b87d94e4cb4f2d8f27d8c6e3a", // Violetta
   German:  "becf484d4ec3411b992206f95e6a3aa5", // Lea
 };
+
+// Selectable avatars — 3 female, 3 male. All non-premium, front-facing.
+// preview_image_url sourced from /v3/avatars (private/heygen_avatars.json).
+export const AVATARS = [
+  {
+    id: "Adriana_BizTalk_Front_public",
+    name: "Adriana",
+    gender: "female" as const,
+    preview: "https://files2.heygen.ai/avatar/v3/c3d1baaebbe84752b7a473373c6cd385_42780/preview_target.webp",
+  },
+  {
+    id: "Adriana_Business_Front_2_public",
+    name: "Adriana (Alt)",
+    gender: "female" as const,
+    preview: "https://files2.heygen.ai/avatar/v3/88dbd2785def417ca7a2b79d4cf40c6d_42780/preview_talk_3.webp",
+  },
+  {
+    id: "Amelia_standing_business_training_front",
+    name: "Amelia",
+    gender: "female" as const,
+    preview: "https://files2.heygen.ai/avatar/v3/20cf0b98ae164abdb4a814dab98e69ca_39260/preview_talk_3.webp",
+  },
+  {
+    id: "Adrian_public_2_20240312",
+    name: "Adrian",
+    gender: "male" as const,
+    preview: "https://files2.heygen.ai/avatar/v3/25ef6c86b1e946969d9a684870c47dfe_14947/preview_talk_1.webp",
+  },
+  {
+    id: "Albert_public_1",
+    name: "Albert",
+    gender: "male" as const,
+    preview: "https://files2.heygen.ai/avatar/v3/57a701a3f0af49e6bda8cf47f1f7c7df_62550/preview_target.webp",
+  },
+  {
+    id: "Armando_Suit_Front_public",
+    name: "Armando",
+    gender: "male" as const,
+    preview: "https://files2.heygen.ai/avatar/v3/ef41b4d270ae48b0af554464adde71aa_43280/preview_talk_5.webp",
+  },
+] as const;
+
+// Selectable English voices — 3 female, 3 male.
+// For non-English languages the translation API uses VOICE_IDS above.
+export const VOICES_EN = [
+  { id: "f8c69e517f424cafaecde32dde57096b", name: "Allison",  gender: "female" as const },
+  { id: "b966c31caf124c2a99f19ff1479c964f", name: "Jessica",  gender: "female" as const },
+  { id: "42d00d4aac5441279d8536cd6b52c53c", name: "Hope",     gender: "female" as const },
+  { id: "d92994ae0de34b2e8659b456a2f388b8", name: "John",     gender: "male"   as const },
+  { id: "828b59f834fd4c7188da322b6d9b6c75", name: "David",    gender: "male"   as const },
+  { id: "88bb9ee1c81b466eb2a08fdde86d3619", name: "Adam",     gender: "male"   as const },
+] as const;
 
 // B-roll asset URLs per section — must be publicly accessible for HeyGen to fetch.
 // Swap placeholder paths for real Helios AI Studio product screens once available.

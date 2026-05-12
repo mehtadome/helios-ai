@@ -9,6 +9,8 @@ import {
   SECTIONS,
   STATUS_STEPS,
   DEMO_BRIEFS,
+  AVATARS,
+  VOICES_EN,
   type SectionKey,
 } from "@/app/lib/constants";
 
@@ -41,6 +43,8 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryAfter, setRetryAfter] = useState(0);
+  const [avatarId, setAvatarId] = useState<string>(AVATARS[0].id);
+  const [voiceId, setVoiceId] = useState<string>(VOICES_EN[0].id);
   const [demoOpen, setDemoOpen] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const submitting = useRef(false);
@@ -85,7 +89,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
         const res = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sections, role, languages }),
+          body: JSON.stringify({ sections, role, languages, avatar_id: avatarId, voice_id: voiceId }),
         });
         const data = await res.json();
         if (!data.ok) {
@@ -342,6 +346,71 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
                       </button>
                     );
                   })}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Avatar + Voice selection */}
+            <motion.div variants={fieldVariants} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">
+                  Avatar
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                  {AVATARS.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => {
+                        setAvatarId(a.id);
+                        // Auto-switch voice to match gender if current voice is wrong gender
+                        const currentVoice = VOICES_EN.find((v) => v.id === voiceId);
+                        if (currentVoice?.gender !== a.gender) {
+                          const match = VOICES_EN.find((v) => v.gender === a.gender);
+                          if (match) setVoiceId(match.id);
+                        }
+                      }}
+                      className={`relative rounded-xl overflow-hidden border-2 transition-all ${
+                        avatarId === a.id
+                          ? "border-blue shadow-sm"
+                          : "border-transparent hover:border-border"
+                      }`}
+                    >
+                      <img
+                        src={a.preview}
+                        alt={a.name}
+                        className="w-full aspect-[3/4] object-cover"
+                      />
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 py-1.5">
+                        <p className="text-[10px] font-semibold text-white leading-tight">{a.name}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-2 uppercase tracking-wider">
+                  Voice
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {VOICES_EN.filter((v) => {
+                    const selectedAvatar = AVATARS.find((a) => a.id === avatarId);
+                    return v.gender === (selectedAvatar?.gender ?? "female");
+                  }).map((v) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setVoiceId(v.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                        voiceId === v.id
+                          ? "bg-blue text-white border-blue"
+                          : "bg-white text-muted border-border hover:border-blue/50 hover:text-foreground"
+                      }`}
+                    >
+                      {v.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             </motion.div>

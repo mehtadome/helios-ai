@@ -8,6 +8,8 @@ interface GenerateBody {
   sections: Partial<Record<SectionKey, string>>;
   role: string;
   languages: string[];
+  avatar_id?: string;
+  voice_id?: string;
 }
 
 // Ordered section keys — drives prompt structure and scene guidance.
@@ -84,7 +86,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { sections, role, languages } = body;
+  const { sections, role, languages, avatar_id, voice_id } = body;
 
   if (!sections || typeof sections !== "object") {
     return NextResponse.json({ ok: false, error: "Missing sections" }, { status: 400 });
@@ -106,8 +108,8 @@ export async function POST(req: NextRequest) {
 
   const payload = {
     prompt:      buildPrompt(sections, role, primaryLanguage),
-    avatar_id:   AVATAR_ID,
-    voice_id:    VOICE_IDS[primaryLanguage],
+    avatar_id:   avatar_id ?? AVATAR_ID,
+    voice_id:    voice_id  ?? VOICE_IDS[primaryLanguage],
     orientation: "landscape",
     files:       buildFiles(sections, baseUrl),
     callback_url: `${baseUrl}/api/webhook`,

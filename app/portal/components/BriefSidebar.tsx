@@ -16,6 +16,11 @@ interface Props {
 export default function BriefSidebar({ briefs, selectedId, onSelect, onNew, onRefresh, refreshing }: Props) {
   return (
     <aside className="w-72 flex-shrink-0 border-r border-border flex flex-col h-full">
+      <div className="px-4 pt-4 pb-2">
+        <a href="/" className="inline-flex items-center gap-1 text-xs text-muted hover:text-foreground transition-colors">
+          <span>←</span> Home
+        </a>
+      </div>
       <div className="px-4 py-5 border-b border-border flex items-center justify-between">
         <div>
           <h2 className="text-sm font-black text-foreground tracking-tight">
