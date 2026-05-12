@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Brief } from "@/app/types";
 import BriefSidebar from "./BriefSidebar";
@@ -8,11 +8,31 @@ import BriefDetail from "./BriefDetail";
 import BriefForm from "@/app/components/BriefForm";
 import { INITIAL_BRIEFS } from "@/app/lib/mock-data";
 
+const STORAGE_KEY = "helios-briefs";
+
 export default function PortalShell() {
   const [briefs, setBriefs] = useState<Brief[]>(INITIAL_BRIEFS);
   const [selectedId, setSelectedId] = useState<string>("new");
   const [refreshing, setRefreshing] = useState(false);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [storageReady, setStorageReady] = useState(false);
+
+  // Rehydrate from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setBriefs(JSON.parse(saved));
+    } catch { /* ignore malformed data */ }
+    setStorageReady(true);
+  }, []);
+
+  // Persist briefs whenever they change (after initial load)
+  useEffect(() => {
+    if (!storageReady) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(briefs));
+    } catch { /* ignore quota errors */ }
+  }, [briefs, storageReady]);
 
   const handleBriefSubmitted = (brief: Brief) => {
     setBriefs((prev) => [brief, ...prev]);
