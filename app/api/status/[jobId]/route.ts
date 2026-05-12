@@ -27,11 +27,13 @@ export async function GET(
     sessionRes = await fetch(`https://api.heygen.com/v3/video-agents/${jobId}`, {
       headers: { "X-Api-Key": apiKey },
     });
-  } catch {
+  } catch (err) {
+    console.error(`[status:${jobId}] network error polling session:`, err);
     return NextResponse.json({ ok: false, error: "Failed to reach HeyGen API" }, { status: 502 });
   }
 
   if (!sessionRes.ok) {
+    console.error(`[status:${jobId}] HeyGen session poll returned ${sessionRes.status}`);
     return NextResponse.json(
       { ok: false, error: `HeyGen returned ${sessionRes.status}` },
       { status: 502 }
@@ -40,6 +42,7 @@ export async function GET(
 
   const sessionData = await sessionRes.json();
   const { status: sessionStatus, video_id } = sessionData?.data ?? {};
+  console.log(`[status:${jobId}] session status: ${sessionStatus}${video_id ? `, video_id: ${video_id}` : ""}`);
 
   // Still thinking/generating — no video_id yet
   if (!video_id) {
@@ -52,11 +55,13 @@ export async function GET(
     videoRes = await fetch(`https://api.heygen.com/v3/videos/${video_id}`, {
       headers: { "X-Api-Key": apiKey },
     });
-  } catch {
+  } catch (err) {
+    console.error(`[status:${jobId}] network error polling video ${video_id}:`, err);
     return NextResponse.json({ ok: false, error: "Failed to reach HeyGen API" }, { status: 502 });
   }
 
   if (!videoRes.ok) {
+    console.error(`[status:${jobId}] HeyGen video poll returned ${videoRes.status}`);
     return NextResponse.json(
       { ok: false, error: `HeyGen returned ${videoRes.status}` },
       { status: 502 }
@@ -65,8 +70,10 @@ export async function GET(
 
   const videoData = await videoRes.json();
   const { status: videoStatus, video_url, failure_code, failure_message } = videoData?.data ?? {};
+  console.log(`[status:${jobId}] video status: ${videoStatus}`);
 
   if (videoStatus === "failed") {
+    console.error(`[status:${jobId}] HeyGen job failed — code: ${failure_code}, message: ${failure_message}`);
     return NextResponse.json({
       ok: true,
       status: "failed" as BriefStatus,
@@ -79,6 +86,8 @@ export async function GET(
   if (videoStatus !== "completed") {
     return NextResponse.json({ ok: true, status: "rendering" as BriefStatus, video_url: null });
   }
+
+  console.log(`[status:${jobId}] completed — video_url: ${video_url}`);
 
   // Step 3 — master complete. Fan out translations only when ?dispatch=1 is present.
   // This is the idempotency guard: only the initial BriefForm poll loop sends dispatch=1.
@@ -98,6 +107,7 @@ export async function GET(
   const translationIds: string[] = [];
 
   if (translationLanguages.length > 0) {
+    console.log(`[status:${jobId}] dispatching translations for: ${translationLanguages.join(", ")}`);
     try {
       const translateRes = await fetch("https://api.heygen.com/v3/video-translate", {
         method: "POST",
@@ -115,9 +125,13 @@ export async function GET(
         const translateData = await translateRes.json();
         const ids: string[] = translateData?.data?.translation_ids ?? [];
         translationIds.push(...ids);
+        console.log(`[status:${jobId}] translation IDs: ${ids.join(", ")}`);
+      } else {
+        console.warn(`[status:${jobId}] translation dispatch returned ${translateRes.status}`);
       }
-    } catch {
-      // Translation dispatch failure is non-fatal — master video is still usable
+    } catch (err) {
+      console.error(`[status:${jobId}] translation dispatch error:`, err);
+      // Non-fatal — master video is still usable
     }
   }
 

@@ -65,12 +65,15 @@ function buildFiles(
 }
 
 export async function POST(req: NextRequest) {
-  // Step 2 — Check per-IP cooldown before touching HeyGen.
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  console.log(`[generate] POST from ${ip}`);
+
+  // Step 2 — Check per-IP cooldown before touching HeyGen.
   const cooldownUntil = ipCooldown.get(ip) ?? 0;
   const now = Date.now();
   if (now < cooldownUntil) {
     const retryAfter = Math.ceil((cooldownUntil - now) / 1000);
+    console.log(`[generate] rate limited — ${ip} must wait ${retryAfter}s`);
     return NextResponse.json(
       { ok: false, error: "rate_limited", retryAfter },
       { status: 429 }
@@ -121,6 +124,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "HEYGEN_API_KEY not configured" }, { status: 500 });
   }
 
+  console.log(`[generate] submitting to HeyGen — avatar: ${payload.avatar_id}, voice: ${payload.voice_id}, language: ${primaryLanguage}, sections: ${Object.keys(sections).join(", ")}`);
+
   let heygenRes: Response;
   try {
     heygenRes = await fetch("https://api.heygen.com/v3/video-agents", {
@@ -131,7 +136,8 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify(payload),
     });
-  } catch {
+  } catch (err) {
+    console.error("[generate] network error reaching HeyGen:", err);
     return NextResponse.json({ ok: false, error: "Failed to reach HeyGen API" }, { status: 502 });
   }
 
@@ -139,6 +145,7 @@ export async function POST(req: NextRequest) {
   if (heygenRes.status === 429) {
     const retryAfter = parseInt(heygenRes.headers.get("Retry-After") ?? "60", 10);
     ipCooldown.set(ip, Date.now() + retryAfter * 1000);
+    console.warn(`[generate] HeyGen 429 — retryAfter: ${retryAfter}s`);
     return NextResponse.json(
       { ok: false, error: "rate_limited", retryAfter },
       { status: 429 }
@@ -147,6 +154,7 @@ export async function POST(req: NextRequest) {
 
   if (!heygenRes.ok) {
     const text = await heygenRes.text();
+    console.error(`[generate] HeyGen error ${heygenRes.status}:`, text);
     return NextResponse.json(
       { ok: false, error: `HeyGen returned ${heygenRes.status}: ${text}` },
       { status: 502 }
@@ -157,11 +165,13 @@ export async function POST(req: NextRequest) {
   const sessionId: string = data?.data?.session_id;
 
   if (!sessionId) {
+    console.error("[generate] no session_id in HeyGen response:", JSON.stringify(data));
     return NextResponse.json({ ok: false, error: "No session_id in HeyGen response" }, { status: 502 });
   }
 
   // Set per-IP cooldown to prevent queuing a second job while the first renders.
   ipCooldown.set(ip, Date.now() + COOLDOWN_MS);
+  console.log(`[generate] job accepted — session_id: ${sessionId}, languages: ${languages.join(", ")}`);
 
   return NextResponse.json({ ok: true, jobId: sessionId, languages });
 }
