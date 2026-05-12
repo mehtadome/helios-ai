@@ -166,6 +166,8 @@ QStash handles this with room to spare. HeyGen rate limits are the actual ceilin
 - Every job has a deterministic `idempotency_key = hash(brief_id + role + language)`
 - Worker checks Postgres before calling HeyGen — prevents duplicate renders on queue retry
 
+**Client-generated IDs and relational alignment:** The POC generates its own `brief_id` client-side (`brief-{timestamp}`) before the HeyGen call. This lets the sidebar upsert in-place (rendering → completed) without a duplicate entry. At Tier 1, this pattern extends cleanly to Postgres: `brief_id` becomes the primary key on the `briefs` table, and the same value is passed as the `callback_id` in the HeyGen payload. If HeyGen's API ever supports a caller-supplied job ID (currently it does not — it returns its own `session_id`), we could use `brief_id` as the Postgres `jobs.id` primary key as well, eliminating the `heygen_session_id` foreign-key mapping column entirely. Until then, `jobs.id` stays a UUIDv4 we generate and `heygen_session_id` is a separate indexed column.
+
 ### Failure handling
 - HeyGen job failed: `failure_code` + `failure_message` stored, job marked `failed`, retry queued with backoff
 - HeyGen 429: QStash retry with exponential backoff, throughput cap lowered automatically

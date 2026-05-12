@@ -30,10 +30,11 @@ const fieldVariants = {
 };
 
 interface BriefFormProps {
-  onBriefSubmitted?: (brief: Brief) => void;
+  onBriefAdded?: (brief: Brief) => void;
+  onBriefCompleted?: (brief: Brief) => void;
 }
 
-export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
+export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormProps) {
   const [role, setRole] = useState<(typeof ROLES)[number]>("Account Executive");
   const [languages, setLanguages] = useState<string[]>(["English"]);
   const [sections, setSections] = useState<Partial<Record<SectionKey, string>>>({});
@@ -74,6 +75,10 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
     setStatus("scripting");
 
     try {
+      // Stable ID shared across both callbacks so PortalShell can upsert in-place.
+      const briefId = `brief-${Date.now()}`;
+      const primaryLanguage = languages.includes("English") ? "English" : languages[0];
+
       // Submit to HeyGen
       let jobId: string;
       try {
@@ -84,7 +89,6 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
         });
         const data = await res.json();
         if (!data.ok) {
-          // Step 4 — capture retryAfter for rate-limit countdown
           if (data.error === "rate_limited") setRetryAfter(data.retryAfter ?? 60);
           throw new Error(data.error ?? "Generation failed");
         }
@@ -97,6 +101,24 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
       }
 
       setStatus("rendering");
+
+      // Add to sidebar immediately so the user can navigate away and submit another brief.
+      // The async poll loop below continues even if this component unmounts.
+      onBriefAdded?.({
+        id: briefId,
+        role,
+        language: primaryLanguage,
+        status: "rendering",
+        createdAt: "Just now",
+        sections: sections as Record<string, string>,
+        videos: languages.map((lang) => ({
+          language: lang,
+          url: null,
+          video_url: null,
+          blob_url: null,
+          status: "rendering" as const,
+        })),
+      });
 
       // Poll until complete or failed
       const languagesParam = encodeURIComponent(JSON.stringify(languages));
@@ -128,24 +150,22 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
 
       setStatus("complete");
 
-      if (onBriefSubmitted) {
-        const newBrief: Brief = {
-          id: `brief-${Date.now()}`,
-          role,
-          language: languages[0],
-          status: "completed",
-          createdAt: "Just now",
-          sections: sections as Record<string, string>,
-          videos: languages.map((lang) => ({
-            language: lang,
-            url: lang === languages[0] ? video_url : null,
-            video_url: lang === languages[0] ? video_url : null,
-            blob_url: null,
-            status: "completed" as const,
-          })),
-        };
-        onBriefSubmitted(newBrief);
-      }
+      // Update the existing sidebar entry in-place — no navigation side-effect.
+      onBriefCompleted?.({
+        id: briefId,
+        role,
+        language: primaryLanguage,
+        status: "completed",
+        createdAt: "Just now",
+        sections: sections as Record<string, string>,
+        videos: languages.map((lang) => ({
+          language: lang,
+          url: lang === primaryLanguage ? video_url : null,
+          video_url: lang === primaryLanguage ? video_url : null,
+          blob_url: null,
+          status: lang === primaryLanguage ? "completed" as const : "rendering" as const,
+        })),
+      });
     } finally {
       submitting.current = false;
     }
@@ -503,7 +523,7 @@ export default function BriefForm({ onBriefSubmitted }: BriefFormProps) {
             )}
 
             {/* Reset button (standalone mode only) */}
-            {status === "complete" && !onBriefSubmitted && (
+            {status === "complete" && !onBriefAdded && (
               <div className="border-t border-border px-6 py-5 flex justify-center">
                 <button
                   onClick={handleReset}

@@ -26,19 +26,28 @@ export default function PortalShell() {
       .finally(() => setRedisReady(true));
   }, []);
 
-  // Persist briefs to Redis on every change (after initial load)
+  // Persist briefs to Redis on every change (after initial load).
+  // Exclude brief-demo-* so mock seed data never pollutes Redis.
   useEffect(() => {
     if (!redisReady) return;
+    const toSave = briefs.filter((b) => !b.id.startsWith("brief-demo-"));
+    if (toSave.length === 0) return;
     fetch("/api/briefs", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(briefs),
+      body: JSON.stringify(toSave),
     }).catch((err) => console.error("[briefs] persist failed:", err));
   }, [briefs, redisReady]);
 
-  const handleBriefSubmitted = (brief: Brief) => {
+  // Called the moment generation starts — adds to sidebar and navigates to it.
+  const handleBriefAdded = (brief: Brief) => {
     setBriefs((prev) => [brief, ...prev]);
     setSelectedId(brief.id);
+  };
+
+  // Called when generation completes — updates the existing entry in-place, no navigation.
+  const handleBriefCompleted = (brief: Brief) => {
+    setBriefs((prev) => prev.map((b) => b.id === brief.id ? brief : b));
   };
 
   const handleRefresh = async () => {
@@ -84,7 +93,7 @@ export default function PortalShell() {
               exit={{ opacity: 0, x: -16 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
             >
-              <BriefForm onBriefSubmitted={handleBriefSubmitted} />
+              <BriefForm onBriefAdded={handleBriefAdded} onBriefCompleted={handleBriefCompleted} />
             </motion.div>
           ) : selectedBrief ? (
             <motion.div
