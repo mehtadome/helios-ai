@@ -35,20 +35,10 @@ export default function PortalShell() {
   const [briefs, setBriefs] = useState<Brief[]>(INITIAL_BRIEFS);
   const [selectedId, setSelectedId] = useState<string>("new");
   const [refreshing, setRefreshing] = useState(false);
-  const deletedIdsRef = useRef<Set<string>>(new Set());
   const lastSavedRef = useRef<string>("");
   const [redisReady, setRedisReady] = useState(false);
 
-  // On mount: seed deletedIdsRef from localStorage so deletions survive page reloads.
-  // Then load Redis briefs and merge with HeyGen, filtering out deleted IDs.
   useEffect(() => {
-    const stored = localStorage.getItem("helios:deletedIds");
-    if (stored) {
-      try {
-        deletedIdsRef.current = new Set(JSON.parse(stored));
-      } catch { /* ignore corrupt storage */ }
-    }
-
     async function init() {
       let redisBriefs: Brief[] = [];
       try {
@@ -56,7 +46,7 @@ export default function PortalShell() {
         if (data.ok) redisBriefs = data.briefs;
       } catch { /* fall back to empty */ }
 
-      const visible = redisBriefs.filter((b) => !deletedIdsRef.current.has(b.id));
+      const visible = redisBriefs.filter((b) => !b.id.startsWith("heygen-"));
 
       console.log("[portal:init] loaded from Redis:", visible);
 
@@ -96,7 +86,7 @@ export default function PortalShell() {
   function saveBriefs(current: Brief[]) {
     const seen = new Set<string>();
     const toSave = current.filter((b) => {
-      if (b.id.startsWith("brief-demo-") || seen.has(b.id)) return false;
+      if (b.id.startsWith("brief-demo-") || b.id.startsWith("heygen-") || seen.has(b.id)) return false;
       seen.add(b.id);
       return true;
     });
@@ -159,42 +149,42 @@ export default function PortalShell() {
 
       const redisBriefs: Brief[] = redisData.ok ? (redisData.briefs ?? []) : [];
       const completedTranslations: CompletedTranslation[] = videosData.translations ?? [];
-      const heygenVideos: Brief[] = (videosData.briefs as Brief[]).filter(
-        (b) => !deletedIdsRef.current.has(b.id)
-      );
+      const heygenVideos: Brief[] = videosData.briefs as Brief[];
       console.log("[refresh] heygen videos:", heygenVideos);
 
-      // Index HeyGen results by brief ID for O(1) upsert lookup.
-      const heygenById = new Map(heygenVideos.map((b) => [b.id, b]));
+      // Index HeyGen results by raw video_id (heygen-{id} → strip prefix) for upsert lookup.
+      // Our briefs use brief-* IDs, so we match by the video_id stored on VideoVariant.
+      const heygenByVideoId = new Map(
+        heygenVideos.map((b) => [b.id.replace(/^heygen-/, ""), b])
+      );
 
       // Upsert Redis entries: refresh video URL/status/title from HeyGen,
-      // but never overwrite sections or translationId.
-      const upserted = redisBriefs.map((b) => {
-        const fresh = heygenById.get(b.id);
-        if (!fresh) return b;
-        return {
-          ...b,
-          role: fresh.role,   // HeyGen-generated title takes precedence
-          status: fresh.status,
-          videos: b.videos.map((v, i) => ({
-            ...v,  // preserves translationId, sections ref, blob_url, etc.
-            url:         fresh.videos[i]?.url         ?? v.url,
-            video_url:   fresh.videos[i]?.video_url   ?? v.video_url,
-            status:      fresh.videos[i]?.status      ?? v.status,
-            duration:    fresh.videos[i]?.duration    ?? v.duration,
-            credit_cost: fresh.videos[i]?.credit_cost ?? v.credit_cost,
-          })),
-        };
-      });
-
-      // Net-new HeyGen entries not in Redis yet.
-      const redisIds = new Set(upserted.map((b) => b.id));
-      const newEntries = heygenVideos.filter((b) => !redisIds.has(b.id));
+      // but never overwrite sections or translationId. Never add heygen-* entries.
+      const upserted = redisBriefs
+        .filter((b) => !b.id.startsWith("heygen-"))
+        .map((b) => {
+          const videoId = b.videos[0]?.video_id;
+          const fresh = videoId ? heygenByVideoId.get(videoId) : undefined;
+          if (!fresh) return b;
+          return {
+            ...b,
+            role: fresh.role,   // HeyGen-generated title takes precedence
+            status: fresh.status,
+            videos: b.videos.map((v, i) => ({
+              ...v,  // preserves translationId, sections ref, blob_url, etc.
+              url:         fresh.videos[i]?.url         ?? v.url,
+              video_url:   fresh.videos[i]?.video_url   ?? v.video_url,
+              status:      fresh.videos[i]?.status      ?? v.status,
+              duration:    fresh.videos[i]?.duration    ?? v.duration,
+              credit_cost: fresh.videos[i]?.credit_cost ?? v.credit_cost,
+            })),
+          };
+        });
 
       setBriefs((prev) => {
         const demoBriefs = prev.filter((b) => b.id.startsWith("brief-demo-"));
         const next = applyCompletedTranslations(
-          [...demoBriefs, ...upserted, ...newEntries],
+          [...demoBriefs, ...upserted],
           completedTranslations
         );
         saveBriefs(next);
@@ -246,11 +236,11 @@ export default function PortalShell() {
               <BriefDetail
                 brief={selectedBrief}
                 onDelete={(id) => {
-                  const next = new Set([...deletedIdsRef.current, id]);
-                  deletedIdsRef.current = next;
-                  localStorage.setItem("helios:deletedIds", JSON.stringify([...next]));
                   setBriefs((prev) => prev.filter((b) => b.id !== id));
                   setSelectedId("new");
+                  fetch(`/api/briefs?id=${encodeURIComponent(id)}`, { method: "DELETE" }).catch(
+                    (err) => console.error("[delete] failed:", err)
+                  );
                 }}
               />
             </motion.div>

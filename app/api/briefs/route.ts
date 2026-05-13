@@ -30,3 +30,33 @@ export async function PUT(req: NextRequest) {
   await redis.set(BRIEFS_KEY, JSON.stringify(briefs));
   return NextResponse.json({ ok: true });
 }
+
+export async function DELETE(req: NextRequest) {
+  const id = req.nextUrl.searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ ok: false, error: "id required" }, { status: 400 });
+  }
+  const redis = await getRedis();
+  const raw = await redis.get(BRIEFS_KEY);
+  const briefs: Brief[] = raw ? JSON.parse(raw) : [];
+  const filtered = briefs.filter((b) => b.id !== id);
+  await redis.set(BRIEFS_KEY, JSON.stringify(filtered));
+  console.log(`[briefs:DELETE] removed id: ${id}, ${filtered.length} brief(s) remaining`);
+
+  // Best-effort HeyGen video deletion — non-fatal if it fails.
+  const apiKey = process.env.HEYGEN_API_KEY;
+  const deleted = briefs.find((b) => b.id === id);
+  if (apiKey && deleted) {
+    const videoIds = deleted.videos.map((v) => v.video_id).filter(Boolean) as string[];
+    await Promise.allSettled(
+      videoIds.map((vid) =>
+        fetch(`https://api.heygen.com/v1/video?video_id=${vid}`, {
+          method: "DELETE",
+          headers: { "X-Api-Key": apiKey },
+        }).then((r) => console.log(`[briefs:DELETE] HeyGen delete ${vid}: ${r.status}`))
+      )
+    );
+  }
+
+  return NextResponse.json({ ok: true });
+}
