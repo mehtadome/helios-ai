@@ -22,6 +22,9 @@ export default function Navbar() {
             <a href="#enhancements" className="hover:text-foreground transition-colors">
               Enhancements
             </a>
+            <a href="/architecture" className="hover:text-foreground transition-colors">
+              Architecture
+            </a>
           </div>
 
           <a href="/portal" className="flex items-center gap-1.5 bg-foreground text-white text-sm font-semibold px-4 py-2 rounded-full hover:bg-black/80 transition-colors">

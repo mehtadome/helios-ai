@@ -50,39 +50,38 @@ export default function Tier2Diagram() {
       <text x="80" y="124" textAnchor="middle" fontSize="12" fontWeight="700" fill={lbl}>CMS</text>
       <text x="80" y="140" textAnchor="middle" fontSize="10" fill={arrow}>optional</text>
 
-      {/* Job Queue: x=264, y=168, w=148, h=52 */}
+      {/* Job Queue: x=278, y=168, w=120, h=52 */}
       <g filter="url(#ns2)">
-        <rect x="264" y="168" width="148" height="52" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="278" y="168" width="120" height="52" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
       <text x="338" y="192" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Job Queue</text>
       <text x="338" y="208" textAnchor="middle" fontSize="10" fill={lbl}>retry · DLQ</text>
 
-      {/* On-Premise container (dashed): x=400, y=148, w=340, h=112 */}
-      <rect x="400" y="148" width="340" height="112" rx="12"
+      {/* On-Premise container (dashed): x=420, y=148, w=340, h=112 */}
+      <rect x="420" y="148" width="340" height="112" rx="12"
         fill="#f8fafc" stroke={stroke} strokeWidth="1.5" strokeDasharray="6 3" />
-      <text x="570" y="168" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={arrow}
+      <text x="590" y="168" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={arrow}
         letterSpacing="0.8">ON-PREMISE STORAGE</text>
 
-      {/* Blob Storage: x=416, y=176, w=135, h=52 */}
+      {/* Blob Storage: x=436, y=176, w=135, h=52 */}
       <g filter="url(#ns2)">
-        <rect x="416" y="176" width="135" height="52" rx="8" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="436" y="176" width="135" height="52" rx="8" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="483" y="200" textAnchor="middle" fontSize="11" fontWeight="700" fill={heading}>Blob Storage</text>
-      <text x="483" y="216" textAnchor="middle" fontSize="10" fill={lbl}>video files</text>
+      <text x="503" y="200" textAnchor="middle" fontSize="11" fontWeight="700" fill={heading}>Blob Storage</text>
+      <text x="503" y="216" textAnchor="middle" fontSize="10" fill={lbl}>video files</text>
 
-      {/* Postgres: x=568, y=176, w=155, h=52 */}
+      {/* Postgres: x=588, y=176, w=155, h=52 */}
       <g filter="url(#ns2)">
-        <rect x="568" y="176" width="155" height="52" rx="8" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="588" y="176" width="155" height="52" rx="8" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="645" y="200" textAnchor="middle" fontSize="11" fontWeight="700" fill={heading}>Postgres</text>
-      <text x="645" y="216" textAnchor="middle" fontSize="10" fill={lbl}>metadata · jobs</text>
+      <text x="665" y="200" textAnchor="middle" fontSize="11" fontWeight="700" fill={heading}>Postgres</text>
+      <text x="665" y="216" textAnchor="middle" fontSize="10" fill={lbl}>metadata · jobs</text>
 
-      {/* Enablement Tool: x=20, y=248, w=160, h=52 */}
-      <g filter="url(#ns2)">
-        <rect x="20" y="248" width="160" height="52" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
-      </g>
-      <text x="100" y="272" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Enablement Tool</text>
-      <text x="100" y="288" textAnchor="middle" fontSize="10" fill={lbl}>Highspot · Seismic · etc.</text>
+      {/* Enablement Tool (optional, dashed): x=20, y=248, w=160, h=52 */}
+      <rect x="20" y="248" width="160" height="52" rx="10"
+        fill="#f8fafc" stroke={arrow} strokeWidth="1.5" strokeDasharray="5 3" />
+      <text x="100" y="272" textAnchor="middle" fontSize="12" fontWeight="700" fill={lbl}>Enablement Tool</text>
+      <text x="100" y="288" textAnchor="middle" fontSize="10" fill={arrow}>optional</text>
 
       {/* ── Arrows ────────────────────────────────────────────────────────── */}
 
@@ -103,29 +102,29 @@ export default function Tier2Diagram() {
 
       {/* 5 · App Server → Job Queue (solid, label "enqueue") */}
       <line x1="316" y1="74" x2="316" y2="168" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr2)" />
-      <rect x="226" y="140" width="68" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="260" y="152" textAnchor="middle" fontSize="9.5" fill={lbl}>enqueue</text>
+      <rect x="246" y="86" width="68" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="280" y="98" textAnchor="middle" fontSize="9.5" fill={lbl}>enqueue</text>
 
       {/* 6 · Job Queue → App Server (dashed, label "dispatch / retry") */}
       <line x1="360" y1="168" x2="360" y2="74"
         stroke={arrow} strokeWidth="1.5" strokeDasharray="5 3" markerEnd="url(#arr2)" />
-      <rect x="364" y="140" width="90" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="409" y="152" textAnchor="middle" fontSize="9.5" fill={lbl}>dispatch / retry</text>
+      <rect x="364" y="116" width="90" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="409" y="128" textAnchor="middle" fontSize="9.5" fill={lbl}>dispatch / retry</text>
 
       {/* 7 · HeyGen → Blob Storage (elbow, label "auto-push") */}
-      <path d="M 654,74 L 654,148 L 483,148 L 483,176"
+      <path d="M 654,74 L 654,134 L 503,134 L 503,176"
         stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr2)" />
-      <rect x="526" y="139" width="70" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="561" y="151" textAnchor="middle" fontSize="9.5" fill={lbl}>auto-push</text>
+      <rect x="546" y="125" width="70" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="581" y="137" textAnchor="middle" fontSize="9.5" fill={lbl}>auto-push</text>
 
       {/* 8 · Blob Storage → Postgres (no label) */}
-      <line x1="551" y1="202" x2="568" y2="202" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr2)" />
+      <line x1="571" y1="202" x2="588" y2="202" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr2)" />
 
-      {/* 9 · Blob Storage → Enablement Tool (elbow, label "publish") */}
-      <path d="M 483,228 L 483,274 L 180,274"
-        stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr2)" />
-      <rect x="294" y="265" width="56" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="322" y="277" textAnchor="middle" fontSize="9.5" fill={lbl}>publish</text>
+      {/* 9 · Blob Storage → Enablement Tool (elbow, dashed optional, label "publish") */}
+      <path d="M 503,228 L 503,274 L 180,274"
+        stroke={arrow} strokeWidth="1.5" fill="none" strokeDasharray="5 3" markerEnd="url(#arr2)" />
+      <rect x="314" y="265" width="56" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="342" y="277" textAnchor="middle" fontSize="9.5" fill={lbl}>publish</text>
     </svg>
   );
 }
