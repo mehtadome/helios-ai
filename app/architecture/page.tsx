@@ -129,22 +129,23 @@ function Tier0Diagram() {
 function Tier1Diagram() {
   const stroke  = "#e2e8f0";
   const arrow   = "#94a3b8";
-  const label   = "#64748b";
+  const lbl     = "#64748b";
   const heading = "#0f172a";
 
-  // Top row — same geometry as T0
-  // Browser:  x=20,  y=28, w=128, h=56  → right (148,50) bottom (84,84)
-  // Next.js:  x=290, y=28, w=168, h=56  → left (290,50) right (458,50) bottom-center (374,84)
-  // HeyGen:   x=572, y=28, w=150, h=56  → left (572,50) bottom-center (647,84)
+  // Top row:
+  //   Browser: x=20,  y=25, w=128, h=56  right=(148,47) bottom=(84,81)
+  //   Next.js: x=220, y=25, w=168, h=56  left=(220,47) right=(388,47) x=232 for cache drop
+  //   HeyGen:  x=530, y=25, w=148, h=56  bottom-left=(572,81) bottom-right=(624,81)
   //
-  // Bottom row — 3 nodes, spread wide so horizontal label segments fit:
-  // Postgres: x=30,  y=215, w=148, h=56 → top-center (104,215)
-  // Redis:    x=198, y=215, w=158, h=56 → top-center (277,215)
-  // On-Prem:  x=448, y=215, w=196, h=56 → top-center (546,215)
+  // Cache (Redis):  x=175, y=175, w=155, h=56  top-left=(232,175) top-right=(280,175) right=(330,203)
+  //
+  // On-Premise container (dashed):  x=388, y=148, w=344, h=108
+  //   Postgres:     x=404, y=178, w=135, h=52
+  //   Blob Storage: x=556, y=178, w=155, h=52
 
   return (
     <svg
-      viewBox="0 0 780 294"
+      viewBox="0 0 760 278"
       width="100%"
       style={{ fontFamily: "inherit", overflow: "visible" }}
     >
@@ -161,89 +162,87 @@ function Tier1Diagram() {
 
       {/* Browser */}
       <g filter="url(#ns1)">
-        <rect x="20" y="28" width="128" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="20" y="25" width="128" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="84" y="53" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Browser</text>
-      <text x="84" y="70" textAnchor="middle" fontSize="10" fill={label}>Client</text>
+      <text x="84" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Browser</text>
+      <text x="84" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Client</text>
 
       {/* Next.js / Vercel */}
       <g filter="url(#ns1)">
-        <rect x="290" y="28" width="168" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="220" y="25" width="168" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="374" y="53" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Next.js / Vercel</text>
-      <text x="374" y="70" textAnchor="middle" fontSize="10" fill={label}>Integration layer</text>
+      <text x="304" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Next.js / Vercel</text>
+      <text x="304" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Integration layer</text>
 
       {/* HeyGen */}
       <g filter="url(#ns1)">
-        <rect x="572" y="28" width="150" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="530" y="25" width="148" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="647" y="53" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>HeyGen</text>
-      <text x="647" y="70" textAnchor="middle" fontSize="10" fill={label}>Video Agent API v3</text>
+      <text x="604" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>HeyGen</text>
+      <text x="604" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Video Agent API v3</text>
 
-      {/* Postgres */}
+      {/* Cache (Redis TTL) */}
       <g filter="url(#ns1)">
-        <rect x="30" y="215" width="148" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="175" y="175" width="155" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="104" y="240" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Postgres</text>
-      <text x="104" y="257" textAnchor="middle" fontSize="10" fill={label}>job metadata</text>
+      <text x="252" y="200" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Cache</text>
+      <text x="252" y="217" textAnchor="middle" fontSize="10" fill={lbl}>Redis · TTL</text>
 
-      {/* Redis (TTL) */}
-      <g filter="url(#ns1)">
-        <rect x="198" y="215" width="158" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
-      </g>
-      <text x="277" y="240" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Redis</text>
-      <text x="277" y="257" textAnchor="middle" fontSize="10" fill={label}>TTL cache · rate limit</text>
+      {/* On-Premise container (dashed) */}
+      <rect x="388" y="148" width="344" height="108" rx="12"
+        fill="#f8fafc" stroke={stroke} strokeWidth="1.5" strokeDasharray="6 3" />
+      <text x="560" y="168" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={arrow}
+        letterSpacing="0.8">ON-PREMISE STORAGE</text>
 
-      {/* On-Premise Storage */}
+      {/* Postgres (inside container) */}
       <g filter="url(#ns1)">
-        <rect x="448" y="215" width="196" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="404" y="178" width="135" height="52" rx="8" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="546" y="240" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>On-Premise Storage</text>
-      <text x="546" y="257" textAnchor="middle" fontSize="10" fill={label}>auto-push on complete</text>
+      <text x="471" y="202" textAnchor="middle" fontSize="11" fontWeight="700" fill={heading}>Postgres</text>
+      <text x="471" y="218" textAnchor="middle" fontSize="10" fill={lbl}>metadata</text>
+
+      {/* Blob Storage (inside container) */}
+      <g filter="url(#ns1)">
+        <rect x="556" y="178" width="155" height="52" rx="8" fill="white" stroke={stroke} strokeWidth="1.5" />
+      </g>
+      <text x="633" y="202" textAnchor="middle" fontSize="11" fontWeight="700" fill={heading}>Blob Storage</text>
+      <text x="633" y="218" textAnchor="middle" fontSize="10" fill={lbl}>video files</text>
 
       {/* ── Arrows ────────────────────────────────────────────────────────── */}
 
-      {/* 1 · Browser → Next.js  (Clerk SSO) */}
-      <line x1="148" y1="50" x2="290" y2="50"
+      {/* 1a · Browser → Next.js  (no label) */}
+      <line x1="148" y1="47" x2="220" y2="47"
         stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
-      <rect x="170" y="33" width="80" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="210" y="45" textAnchor="middle" fontSize="9.5" fill={label}>Clerk SSO</text>
 
-      {/* 2 · Next.js → HeyGen */}
-      <line x1="458" y1="50" x2="572" y2="50"
+      {/* 1b · Next.js → Browser  (no label, offset below) */}
+      <line x1="220" y1="57" x2="148" y2="57"
         stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
-      <rect x="464" y="33" width="106" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="517" y="45" textAnchor="middle" fontSize="9.5" fill={label}>POST /api/generate</text>
 
-      {/* 3 · HeyGen → Next.js  (webhook push, arc) */}
-      <path d="M 647,84 C 647,164 374,164 374,84"
-        stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr1)" />
-      <rect x="434" y="136" width="136" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="502" y="148" textAnchor="middle" fontSize="9.5" fill={label}>webhook · callback_url</text>
-
-      {/* 4 · Next.js → Browser  (SSE stream) */}
-      <line x1="290" y1="62" x2="148" y2="62"
+      {/* 2 · Next.js → HeyGen  (no label) */}
+      <line x1="388" y1="47" x2="530" y2="47"
         stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
-      <rect x="183" y="64" width="70" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="218" y="76" textAnchor="middle" fontSize="9.5" fill={label}>SSE stream</text>
 
-      {/* 5 · Next.js → Postgres  (elbow left, wide arc for label room) */}
-      <path d="M 315,84 L 315,188 L 104,188 L 104,215"
+      {/* 3 · HeyGen → Cache  (elbow: down then left to Cache top-right, label "TTL cache") */}
+      <path d="M 572,81 L 572,138 L 280,138 L 280,175"
         stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr1)" />
-      <rect x="165" y="179" width="88" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="209" y="191" textAnchor="middle" fontSize="9.5" fill={label}>job metadata</text>
+      <rect x="384" y="129" width="72" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="420" y="141" textAnchor="middle" fontSize="9.5" fill={lbl}>TTL cache</text>
 
-      {/* 6 · Next.js → Redis  (elbow, label on vertical) */}
-      <path d="M 374,84 L 374,188 L 277,188 L 277,215"
-        stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr1)" />
-      <rect x="378" y="118" width="64" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="410" y="130" textAnchor="middle" fontSize="9.5" fill={label}>TTL cache</text>
+      {/* 4 · HeyGen → On-Premise container  (straight down, label "auto-push") */}
+      <line x1="624" y1="81" x2="624" y2="148"
+        stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      <rect x="630" y="106" width="70" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="665" y="118" textAnchor="middle" fontSize="9.5" fill={lbl}>auto-push</text>
 
-      {/* 7 · Next.js → On-Premise  (elbow right) */}
-      <path d="M 435,84 L 435,188 L 546,188 L 546,215"
-        stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr1)" />
-      <rect x="448" y="179" width="86" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="491" y="191" textAnchor="middle" fontSize="9.5" fill={label}>auto-push MP4</text>
+      {/* 5 · Next.js → Cache  (straight down, no label) */}
+      <line x1="232" y1="81" x2="232" y2="175"
+        stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+
+      {/* 6 · Cache → Postgres  (horizontal into container, label "2nd hit miss") */}
+      <line x1="330" y1="203" x2="404" y2="203"
+        stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      <rect x="330" y="193" width="82" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="371" y="205" textAnchor="middle" fontSize="9.5" fill={lbl}>2nd hit miss</text>
     </svg>
   );
 }
