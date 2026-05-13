@@ -129,6 +129,8 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
       // Poll until complete or failed
       const languagesParam = encodeURIComponent(JSON.stringify(languages));
       let video_url: string | null = null;
+      let credit_cost: number | undefined;
+      let duration: number | undefined;
 
       const MAX_POLLS = 900; // 60 min hard ceiling — rely on HeyGen's failed signal, not this cap
       for (let poll = 0; poll < MAX_POLLS; poll++) {
@@ -142,7 +144,12 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
             setStatus("error");
             return;
           }
-          if (data.status === "completed") { video_url = data.video_url; break; }
+          if (data.status === "completed") {
+            video_url = data.video_url;
+            credit_cost = data.credit_cost;
+            duration = data.duration;
+            break;
+          }
         } catch {
           break;
         }
@@ -170,6 +177,8 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
           video_url: lang === primaryLanguage ? video_url : null,
           blob_url: null,
           status: lang === primaryLanguage ? "completed" as const : "rendering" as const,
+          credit_cost: lang === primaryLanguage ? credit_cost : undefined,
+          duration: lang === primaryLanguage ? duration : undefined,
         })),
       });
     } finally {

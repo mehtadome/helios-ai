@@ -50,6 +50,7 @@ export async function GET() {
     heygenVideos.map(async (v) => {
       let videoUrl: string | null = null;
 
+      let duration: number | undefined;
       if (v.status === "completed") {
         try {
           const videoRes = await fetch(`https://api.heygen.com/v3/videos/${v.video_id}`, {
@@ -58,6 +59,7 @@ export async function GET() {
           if (videoRes.ok) {
             const videoData = await videoRes.json();
             videoUrl = videoData?.data?.video_url ?? null;
+            duration = videoData?.data?.duration ?? undefined;
           }
         } catch {
           console.warn(`[videos] failed to fetch URL for ${v.video_id}`);
@@ -65,12 +67,15 @@ export async function GET() {
       }
 
       const status = mapStatus(v.status);
+      const credit_cost = typeof duration === "number" ? Math.ceil(duration / 60) : undefined;
       const video: VideoVariant = {
         language: "English",
         url: videoUrl,
         video_url: videoUrl,
         blob_url: null,
         status: status === "completed" || status === "failed" ? status : "rendering",
+        duration,
+        credit_cost,
       };
 
       return {

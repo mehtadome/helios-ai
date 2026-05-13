@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { AVATAR_ID, VOICE_IDS, BROLL_ASSETS, SCENE_TYPES, type SectionKey } from "@/app/lib/constants";
 import { getRedis } from "@/app/lib/redis";
 
-const COOLDOWN_S = 90; // seconds — matches max expected generation time
-
 interface GenerateBody {
   sections: Partial<Record<SectionKey, string>>;
   role: string;
@@ -63,20 +61,7 @@ function buildFiles(
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-  console.log(`[generate] POST from ${ip}`);
-
-  // Per-IP cooldown via Redis — works across all Vercel function instances.
   const redis = await getRedis();
-  const cooldownKey = `helios:cooldown:${ip}`;
-  const ttl = await redis.ttl(cooldownKey);
-  if (ttl > 0) {
-    console.log(`[generate] rate limited — ${ip} must wait ${ttl}s`);
-    return NextResponse.json(
-      { ok: false, error: "rate_limited", retryAfter: ttl },
-      { status: 429 }
-    );
-  }
 
   let body: GenerateBody;
 
@@ -144,7 +129,6 @@ export async function POST(req: NextRequest) {
   // Step 1 — Detect HeyGen 429 and surface retryAfter to the client.
   if (heygenRes.status === 429) {
     const retryAfter = parseInt(heygenRes.headers.get("Retry-After") ?? "60", 10);
-    await redis.set(cooldownKey, "1", { EX: retryAfter });
     console.warn(`[generate] HeyGen 429 — retryAfter: ${retryAfter}s`);
     return NextResponse.json(
       { ok: false, error: "rate_limited", retryAfter },
@@ -169,8 +153,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "No session_id in HeyGen response" }, { status: 502 });
   }
 
-  // Set per-IP cooldown in Redis — expires automatically, no cleanup needed.
-  await redis.set(cooldownKey, "1", { EX: COOLDOWN_S });
   console.log(`[generate] job accepted — session_id: ${sessionId}, languages: ${languages.join(", ")}`);
 
   return NextResponse.json({ ok: true, jobId: sessionId, languages });

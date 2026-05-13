@@ -55,7 +55,7 @@ The demo must include a simple web UI — not CLI only. Minimum: a form (brief i
 
 | Audience | Focus | Time Budget |
 |---|---|---|
-| CRO | Before/after story: 4–6 weeks → 24 hours, 1 language → 5 simultaneous | ~2 min |
+| CRO | Before/after story: 4–6 weeks → 30 minutes, 1 language → 5 simultaneous | ~2 min |
 | Head of Enablement | Operational workflow — how a brief becomes a video | ~5 min |
 | Staff Engineer | Architecture, error handling, idempotency, failure at job #847 | ~15 min |
 

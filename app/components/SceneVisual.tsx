@@ -97,7 +97,7 @@ export default function SceneVisual() {
         transition={{ delay: 1, duration: 0.4 }}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-blue animate-pulse" />
-        Rendering 5 languages
+        Rendering 6 languages
       </motion.div>
     </div>
   );

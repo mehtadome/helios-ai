@@ -7,6 +7,27 @@ import { SECTION_LABELS } from "@/app/lib/constants";
 import DownloadModal from "./DownloadModal";
 
 // ---------------------------------------------------------------------------
+// Download / push to endpoint (separate from the browser player ⋮ menu)
+// ---------------------------------------------------------------------------
+
+function DownloadVideoToolbar({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="mt-3 flex justify-end border-t border-border pt-3">
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2 text-xs font-semibold text-foreground shadow-sm hover:border-blue hover:text-blue transition-colors"
+      >
+        <svg className="h-3.5 w-3.5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Download or push to storage
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Video placeholder
 // ---------------------------------------------------------------------------
 
@@ -23,11 +44,10 @@ function VideoPlaceholder({
 }) {
   if (url) {
     return (
-      <video
-        src={url}
-        controls
-        className="w-full rounded-2xl bg-black"
-      />
+      <div className="w-full">
+        <video src={url} controls className="w-full rounded-2xl bg-black" />
+        <DownloadVideoToolbar onClick={onDownloadClick} />
+      </div>
     );
   }
 
@@ -68,60 +88,48 @@ function VideoPlaceholder({
   }
 
   return (
-    <div className="relative w-full aspect-video rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center overflow-hidden group cursor-pointer">
-      {/* Subtle grid */}
-      <div className="absolute inset-0 opacity-5">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute border-t border-white"
-            style={{ top: `${i * 14}%`, left: 0, right: 0 }}
-          />
-        ))}
-      </div>
-      {/* Glow */}
-      <div className="absolute inset-0 bg-blue/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+    <div className="w-full">
+      <div className="relative w-full aspect-video rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center overflow-hidden group cursor-pointer">
+        {/* Subtle grid */}
+        <div className="absolute inset-0 opacity-5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute border-t border-white"
+              style={{ top: `${i * 14}%`, left: 0, right: 0 }}
+            />
+          ))}
+        </div>
+        {/* Glow */}
+        <div className="absolute inset-0 bg-blue/5 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-      {/* Play button */}
-      <motion.div
-        whileHover={{ scale: 1.08 }}
-        className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-sm"
-      >
-        <svg
-          className="w-7 h-7 text-white ml-1"
-          fill="currentColor"
-          viewBox="0 0 24 24"
+        {/* Play button */}
+        <motion.div
+          whileHover={{ scale: 1.08 }}
+          className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-sm"
         >
-          <path d="M8 5v14l11-7z" />
-        </svg>
-      </motion.div>
+          <svg className="w-7 h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </motion.div>
 
-      {/* Bottom bar */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent">
-        <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue" />
-          <span className="text-xs font-medium text-white/80">{language}</span>
-        </div>
-        <div className="flex items-center gap-3">
+        {/* Bottom bar */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue" />
+            <span className="text-xs font-medium text-white/80">{language}</span>
+          </div>
           <span className="text-xs text-white/60">73s · MP4</span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDownloadClick(); }}
-            className="text-xs font-semibold text-white/80 hover:text-white flex items-center gap-1 transition-colors"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Download
-          </button>
+        </div>
+
+        {/* "Connect API" overlay message */}
+        <div className="absolute top-3 right-3 max-w-[14rem]">
+          <span className="text-xs bg-black/40 text-white/60 px-2 py-1 rounded-full backdrop-blur-sm">
+            Connect HeyGen API to view
+          </span>
         </div>
       </div>
-
-      {/* "Connect API" overlay message */}
-      <div className="absolute top-3 right-3">
-        <span className="text-xs bg-black/40 text-white/60 px-2 py-1 rounded-full backdrop-blur-sm">
-          Connect HeyGen API to view
-        </span>
-      </div>
+      <DownloadVideoToolbar onClick={onDownloadClick} />
     </div>
   );
 }
@@ -131,7 +139,13 @@ function VideoPlaceholder({
 // ---------------------------------------------------------------------------
 
 export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelete?: (id: string) => void }) {
-  const [activeLanguage, setActiveLanguage] = useState(brief.videos[0]?.language ?? brief.language);
+  const sortedVideos = [...brief.videos].sort((a, b) =>
+    a.status === "completed" && b.status !== "completed" ? -1 :
+    a.status !== "completed" && b.status === "completed" ? 1 : 0
+  );
+  const [activeLanguage, setActiveLanguage] = useState(
+    sortedVideos.find((v) => v.status === "completed")?.language ?? sortedVideos[0]?.language ?? brief.language
+  );
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [downloadTarget, setDownloadTarget] = useState<{ language: string; url: string | null } | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -211,9 +225,9 @@ export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelet
       </div>
 
       {/* Language tabs */}
-      {brief.videos.length > 0 && (
+      {sortedVideos.length > 0 && (
         <div className="flex items-center gap-1 p-1 rounded-xl border border-border bg-gray-50 w-fit mb-5">
-          {brief.videos.map((v) => (
+          {sortedVideos.map((v) => (
             <button
               key={v.language}
               onClick={() => setActiveLanguage(v.language)}
@@ -252,6 +266,12 @@ export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelet
               setDownloadTarget({ language: activeLanguage, url: activeVideo?.url ?? null })
             }
           />
+          {activeVideo?.credit_cost != null && (
+            <p className="text-xs text-muted mt-2">
+              {activeVideo.credit_cost} HeyGen credit{activeVideo.credit_cost !== 1 ? "s" : ""}
+              {activeVideo.duration != null && ` · ${Math.round(activeVideo.duration)}s`}
+            </p>
+          )}
         </motion.div>
       </AnimatePresence>
 
