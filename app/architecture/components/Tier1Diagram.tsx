@@ -28,7 +28,7 @@ export default function Tier1Diagram() {
       <g filter="url(#ns1)">
         <rect x="220" y="25" width="168" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="304" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Next.js / Vercel</text>
+      <text x="304" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>App Server</text>
       <text x="304" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Integration layer</text>
 
       {/* HeyGen: x=530, y=25, w=148, h=56 */}
