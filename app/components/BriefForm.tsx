@@ -139,12 +139,14 @@ export default function BriefForm({ onBriefAdded, onBriefUpdated, onBriefComplet
       let resolvedRole = role; // updated when HeyGen assigns a title
 
       const MAX_POLLS = 900; // 60 min hard ceiling — rely on HeyGen's failed signal, not this cap
+      let errorStreak = 0;
       for (let poll = 0; poll < MAX_POLLS; poll++) {
         await delay(4000);
         try {
           const res = await fetch(`/api/status/${jobId}?languages=${languagesParam}&dispatch=1`);
           const data = await res.json();
           if (!data.ok) break;
+          errorStreak = 0;
           if (data.status === "failed") {
             setErrorMessage("Video generation failed on HeyGen's side.");
             setStatus("error");
@@ -165,7 +167,7 @@ export default function BriefForm({ onBriefAdded, onBriefUpdated, onBriefComplet
             break;
           }
         } catch {
-          break;
+          if (++errorStreak >= 3) break;
         }
       }
 

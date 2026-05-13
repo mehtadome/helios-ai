@@ -6,12 +6,14 @@ export async function resumePoll(brief: Brief, onUpdate: (updated: Brief) => voi
   const primaryLanguage = languages.includes("English") ? "English" : languages[0];
   const languagesParam = encodeURIComponent(JSON.stringify(languages));
 
+  let errorStreak = 0;
   for (let poll = 0; poll < 900; poll++) {
     await new Promise((r) => setTimeout(r, 4000));
     try {
       const res = await fetch(`/api/status/${brief.jobId}?languages=${languagesParam}&dispatch=1`);
       const data = await res.json();
       if (!data.ok) return;
+      errorStreak = 0;
 
       if (data.status === "failed") {
         onUpdate({
@@ -55,7 +57,7 @@ export async function resumePoll(brief: Brief, onUpdate: (updated: Brief) => voi
         onUpdate(brief);
       }
     } catch {
-      return;
+      if (++errorStreak >= 3) return;
     }
   }
 }
