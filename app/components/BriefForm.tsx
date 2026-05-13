@@ -117,6 +117,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
         status: "rendering",
         createdAt: "Just now",
         sections: sections as Record<string, string>,
+        jobId,
         videos: languages.map((lang) => ({
           language: lang,
           url: null,
@@ -129,6 +130,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
       // Poll until complete or failed
       const languagesParam = encodeURIComponent(JSON.stringify(languages));
       let video_url: string | null = null;
+      let video_id: string | undefined;
       let credit_cost: number | undefined;
       let duration: number | undefined;
 
@@ -146,6 +148,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
           }
           if (data.status === "completed") {
             video_url = data.video_url;
+            video_id = data.video_id;
             credit_cost = data.credit_cost;
             duration = data.duration;
             break;
@@ -177,6 +180,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
           video_url: lang === primaryLanguage ? video_url : null,
           blob_url: null,
           status: lang === primaryLanguage ? "completed" as const : "rendering" as const,
+          video_id: lang === primaryLanguage ? video_id : undefined,
           credit_cost: lang === primaryLanguage ? credit_cost : undefined,
           duration: lang === primaryLanguage ? duration : undefined,
         })),

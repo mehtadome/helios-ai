@@ -44,10 +44,15 @@ export async function GET() {
   console.log(`[videos] fetched ${heygenVideos.length} videos from HeyGen`);
   heygenVideos.forEach((v) => console.log(`[videos]  id: ${v.video_id} | status: ${v.status} | title: ${v.video_title}`));
 
+  // Translations come back with status "success" and title "Untitled-{Language}".
+  // They belong to a parent brief already tracked via brief-* entries — exclude them here.
+  const masterVideos = heygenVideos.filter((v) => v.status !== "success");
+  console.log(`[videos] ${masterVideos.length} master video(s) after filtering translations`);
+
   // For each completed video, fetch the actual URL — N+1 but acceptable at POC scale.
   // At production scale, store video_url in Postgres on webhook receipt instead.
   const briefs: Brief[] = await Promise.all(
-    heygenVideos.map(async (v) => {
+    masterVideos.map(async (v) => {
       let videoUrl: string | null = null;
 
       let duration: number | undefined;
