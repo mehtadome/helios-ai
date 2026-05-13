@@ -10,6 +10,9 @@ export default function Tier1Diagram() {
         <marker id="arr1" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
           <path d="M0,0 L7,3.5 L0,7 Z" fill={arrow} />
         </marker>
+        <marker id="arr1-red" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#ef4444" />
+        </marker>
         <filter id="ns1" x="-20%" y="-20%" width="140%" height="140%">
           <feDropShadow dx="0" dy="1" stdDeviation="2.5" floodOpacity="0.07" />
         </filter>
@@ -24,11 +27,11 @@ export default function Tier1Diagram() {
       <text x="74" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Browser</text>
       <text x="74" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Client</text>
 
-      {/* SSO: x=144, y=25, w=68, h=54 */}
+      {/* SSO: x=164, y=25, w=52, h=54 */}
       <g filter="url(#ns1)">
-        <rect x="144" y="25" width="68" height="54" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="164" y="25" width="52" height="54" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="178" y="55" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>SSO</text>
+      <text x="190" y="55" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>SSO</text>
 
       {/* App Server: x=268, y=25, w=148, h=54 */}
       <g filter="url(#ns1)">
@@ -73,17 +76,11 @@ export default function Tier1Diagram() {
 
       {/* ── Arrows ────────────────────────────────────────────────────────── */}
 
-      {/* 1a · Browser → SSO (no label) */}
-      <line x1="128" y1="47" x2="144" y2="47" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
-
       {/* 1b · SSO → Browser (no label) */}
-      <line x1="144" y1="57" x2="128" y2="57" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      <line x1="164" y1="52" x2="128" y2="52" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
 
       {/* 2a · SSO → App Server (no label) */}
-      <line x1="212" y1="47" x2="268" y2="47" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
-
-      {/* 2b · App Server → SSO (no label) */}
-      <line x1="268" y1="57" x2="212" y2="57" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      <line x1="216" y1="52" x2="268" y2="52" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
 
       {/* 3 · App Server → HeyGen (no label) */}
       <line x1="416" y1="47" x2="556" y2="47" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
@@ -99,12 +96,13 @@ export default function Tier1Diagram() {
       <rect x="656" y="106" width="70" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
       <text x="691" y="118" textAnchor="middle" fontSize="9.5" fill={lbl}>auto-push</text>
 
-      {/* 6 · App Server → Cache (straight down, no label) */}
-      <line x1="280" y1="79" x2="280" y2="175" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      {/* 6 · App Server → Cache (elbow left, arrives left of HeyGen→Cache at x=252) */}
+      <path d="M 280,79 L 280,120 L 220,120 L 220,175"
+        stroke="#ef4444" strokeWidth="1.5" fill="none" markerEnd="url(#arr1-red)" />
 
       {/* 7 · Cache → Postgres (horizontal, label "2nd hit miss") */}
       <line x1="330" y1="203" x2="404" y2="203" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
-      <rect x="330" y="193" width="82" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <rect x="330" y="193" width="82" height="16" rx="4" fill="white" stroke="#ef4444" strokeWidth="1" />
       <text x="371" y="205" textAnchor="middle" fontSize="9.5" fill={lbl}>2nd hit miss</text>
     </svg>
   );

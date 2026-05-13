@@ -86,17 +86,11 @@ export default function Tier2Diagram() {
 
       {/* ── Arrows ────────────────────────────────────────────────────────── */}
 
-      {/* 1a · Browser → SSO (no label) */}
-      <line x1="120" y1="43" x2="148" y2="43" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr2)" />
-
       {/* 1b · SSO → Browser (no label) */}
-      <line x1="148" y1="55" x2="120" y2="55" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr2)" />
+      <line x1="148" y1="49" x2="120" y2="49" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr2)" />
 
       {/* 2a · SSO → App Server (no label) */}
-      <line x1="216" y1="43" x2="264" y2="43" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr2)" />
-
-      {/* 2b · App Server → SSO (no label) */}
-      <line x1="264" y1="55" x2="216" y2="55" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr2)" />
+      <line x1="216" y1="49" x2="264" y2="49" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr2)" />
 
       {/* 3 · App Server → HeyGen (no label) */}
       <line x1="412" y1="43" x2="580" y2="43" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr2)" />
