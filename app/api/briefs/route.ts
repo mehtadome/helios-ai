@@ -27,7 +27,12 @@ export async function PUT(req: NextRequest) {
   briefs.forEach((b) =>
     console.log(`[briefs:PUT]  id: ${b.id} | status: ${b.status} | sections: ${Object.keys(b.sections).length} keys`)
   );
-  await redis.set(BRIEFS_KEY, JSON.stringify(briefs));
+  try {
+    await redis.set(BRIEFS_KEY, JSON.stringify(briefs));
+  } catch (err) {
+    console.error("[briefs:PUT] Redis write failed:", err);
+    return NextResponse.json({ ok: false, error: "Failed to persist briefs" }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }
 
@@ -40,7 +45,12 @@ export async function DELETE(req: NextRequest) {
   const raw = await redis.get(BRIEFS_KEY);
   const briefs: Brief[] = raw ? JSON.parse(raw) : [];
   const filtered = briefs.filter((b) => b.id !== id);
-  await redis.set(BRIEFS_KEY, JSON.stringify(filtered));
+  try {
+    await redis.set(BRIEFS_KEY, JSON.stringify(filtered));
+  } catch (err) {
+    console.error("[briefs:DELETE] Redis write failed:", err);
+    return NextResponse.json({ ok: false, error: "Failed to persist deletion" }, { status: 500 });
+  }
   console.log(`[briefs:DELETE] removed id: ${id}, ${filtered.length} brief(s) remaining`);
 
   // Best-effort HeyGen video deletion — non-fatal if it fails.
