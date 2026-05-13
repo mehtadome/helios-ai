@@ -80,12 +80,12 @@ export default function HeroSection() {
               Generate your first video
               <span aria-hidden>→</span>
             </Link>
-            <a
-              href="#"
+            <Link
+              href="/architecture"
               className="text-sm font-medium text-muted hover:text-foreground transition-colors"
             >
               View architecture →
-            </a>
+            </Link>
           </motion.div>
 
           <motion.div
