@@ -12,19 +12,24 @@ export async function resumePoll(brief: Brief, onUpdate: (updated: Brief) => voi
       const res = await fetch(`/api/status/${brief.jobId}?languages=${languagesParam}&dispatch=1`);
       const data = await res.json();
       if (!data.ok) return;
+
       if (data.status === "failed") {
         onUpdate({
           ...brief,
           status: "failed",
+          progress: undefined,
           videos: brief.videos.map((v) => ({ ...v, status: "failed" as const })),
         });
         return;
       }
+
       if (data.status === "completed") {
         onUpdate({
           ...brief,
           status: "completed",
-          jobId: undefined,  // clear once done so it won't be re-polled on future reloads
+          jobId: undefined,
+          progress: undefined,
+          role: data.title ?? brief.role,
           videos: brief.videos.map((v) => ({
             ...v,
             url: v.language === primaryLanguage ? data.video_url : v.url,
@@ -36,6 +41,14 @@ export async function resumePoll(brief: Brief, onUpdate: (updated: Brief) => voi
           })),
         });
         return;
+      }
+
+      // Intermediate tick — propagate title and progress as they arrive.
+      const updatedRole = data.title ?? brief.role;
+      const updatedProgress = data.progress ?? brief.progress;
+      if (updatedRole !== brief.role || updatedProgress !== brief.progress) {
+        brief = { ...brief, role: updatedRole, progress: updatedProgress };
+        onUpdate(brief);
       }
     } catch {
       return;

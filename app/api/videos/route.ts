@@ -43,10 +43,29 @@ export async function GET() {
   console.log(`[videos] fetched ${heygenVideos.length} videos from HeyGen`);
   heygenVideos.forEach((v) => console.log(`[videos]  id: ${v.id} | status: ${v.status} | title: ${v.title}`));
 
-  // Filter out translation videos — they appear with "Untitled-{Language}" titles and
-  // belong to parent briefs already tracked via brief-* entries.
+  // Split: master videos vs translation videos ("Untitled-{Language}" pattern).
+  // Translation IDs follow the format "{translationId}-{langCode}" — extract the base
+  // translationId so PortalShell can match them back to their parent brief's VideoVariant.
+  const LANG_CODE_TO_NAME: Record<string, string> = {
+    it: "Italian", de: "German", es: "Spanish", fr: "French",
+    zh: "Chinese", pt: "Portuguese", ja: "Japanese", ko: "Korean",
+  };
+
   const masterVideos = heygenVideos.filter((v) => !v.title?.startsWith("Untitled-"));
-  console.log(`[videos] ${masterVideos.length} master video(s) after filtering translations`);
+  const translationVideos = heygenVideos.filter((v) => v.title?.startsWith("Untitled-"));
+
+  console.log(`[videos] ${masterVideos.length} master, ${translationVideos.length} translation video(s)`);
+
+  // Map translation videos to { translationId, language, video_url, status } tuples.
+  // The full video ID (e.g. "88a38fef...-fr") IS the translation job ID — do not strip the suffix.
+  const translations = translationVideos
+    .filter((v) => v.video_url)
+    .map((v) => {
+      const dashIdx = v.id.lastIndexOf("-");
+      const langCode = dashIdx !== -1 ? v.id.slice(dashIdx + 1) : "";
+      const language = LANG_CODE_TO_NAME[langCode] ?? langCode;
+      return { translationId: v.id, language, video_url: v.video_url!, status: v.status };
+    });
 
   // v3 includes video_url and duration in the list response — no N+1 detail fetch needed.
   const briefs: Brief[] = masterVideos.map((v) => {
@@ -76,5 +95,5 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json({ ok: true, briefs });
+  return NextResponse.json({ ok: true, briefs, translations });
 }

@@ -11,6 +11,26 @@ import { INITIAL_BRIEFS } from "@/app/lib/mock-data";
 import { resumePoll } from "@/app/lib/resumePoll";
 import { startTranslationPolling } from "@/app/lib/startTranslationPolling";
 
+type CompletedTranslation = { translationId: string; language: string; video_url: string };
+
+function applyCompletedTranslations(briefs: Brief[], translations: CompletedTranslation[]): Brief[] {
+  if (translations.length === 0) return briefs;
+  const byId = new Map(translations.map((t) => [t.translationId, t]));
+  return briefs.map((brief) => {
+    const updatedVideos = brief.videos.map((v) => {
+      if (!v.translationId) return v;
+      const match = byId.get(v.translationId);
+      if (!match) return v;
+      // Always refresh URL — signed URLs expire, so update even if already completed.
+      return { ...v, url: match.video_url, video_url: match.video_url, status: "completed" as const };
+    });
+    const anyChanged = updatedVideos.some((v, i) => v !== brief.videos[i]);
+    if (!anyChanged) return brief;
+    const allDone = updatedVideos.every((v) => v.status === "completed" || v.status === "failed");
+    return { ...brief, videos: updatedVideos, status: allDone ? "completed" : brief.status };
+  });
+}
+
 export default function PortalShell() {
   const [briefs, setBriefs] = useState<Brief[]>(INITIAL_BRIEFS);
   const [selectedId, setSelectedId] = useState<string>("new");
@@ -34,40 +54,17 @@ export default function PortalShell() {
       try {
         const data = await fetch("/api/briefs").then((r) => r.json());
         if (data.ok) redisBriefs = data.briefs;
-      } catch { /* fall back */ }
+      } catch { /* fall back to empty */ }
 
-      let heygenBriefs: Brief[] = [];
-      try {
-        const data = await fetch("/api/videos").then((r) => r.json());
-        if (data.ok) {
-          heygenBriefs = (data.briefs as Brief[]).filter(
-            (b) => !deletedIdsRef.current.has(b.id)
-          );
-        }
-      } catch { /* non-fatal */ }
+      const visible = redisBriefs.filter((b) => !deletedIdsRef.current.has(b.id));
 
-      // Exclude heygen-* entries whose video URL is already tracked by a brief-*
-      // to avoid every past test submission flooding the sidebar.
-      const trackedUrls = new Set(
-        redisBriefs.flatMap((b) => b.videos.map((v) => v.url)).filter(Boolean)
-      );
-      const merged = [
-        ...redisBriefs,
-        ...heygenBriefs.filter(
-          (b) => !redisBriefs.some((r) => r.id === b.id) &&
-                 !b.videos.some((v) => v.url && trackedUrls.has(v.url))
-        ),
-      ];
+      console.log("[portal:init] loaded from Redis:", visible);
 
-      console.log("[portal:init] redis briefs:", redisBriefs);
-      console.log("[portal:init] heygen briefs:", heygenBriefs);
-      console.log("[portal:init] merged:", merged);
-
-      if (merged.length > 0) setBriefs(merged);
+      if (visible.length > 0) setBriefs(visible);
       setRedisReady(true);
 
-      // Resume polling for any brief that was rendering when the page last unloaded.
-      const inProgress = merged.filter(
+      // Resume polling for any brief still in-flight when the page last unloaded.
+      const inProgress = visible.filter(
         (b) => b.jobId && (b.status === "rendering" || b.status === "scripting")
       );
       for (const brief of inProgress) {
@@ -81,9 +78,8 @@ export default function PortalShell() {
         });
       }
 
-      // Resume translation polling for briefs whose master completed before reload
-      // but whose translation videos haven't resolved yet.
-      for (const brief of merged) {
+      // Resume translation polling for briefs whose master completed before reload.
+      for (const brief of visible) {
         startTranslationPolling(brief, applyBriefUpdate);
       }
     }
@@ -98,7 +94,12 @@ export default function PortalShell() {
   }, [briefs, redisReady]);
 
   function saveBriefs(current: Brief[]) {
-    const toSave = current.filter((b) => !b.id.startsWith("brief-demo-") && !b.id.startsWith("heygen-"));
+    const seen = new Set<string>();
+    const toSave = current.filter((b) => {
+      if (b.id.startsWith("brief-demo-") || seen.has(b.id)) return false;
+      seen.add(b.id);
+      return true;
+    });
     const serialized = JSON.stringify(toSave);
     if (serialized === lastSavedRef.current) return;
     lastSavedRef.current = serialized;
@@ -128,6 +129,11 @@ export default function PortalShell() {
     setSelectedId(brief.id);
   };
 
+  // Called on intermediate poll ticks when title or progress changes mid-render.
+  const handleBriefUpdated = (brief: Brief) => {
+    setBriefs((prev) => prev.map((b) => (b.id === brief.id ? { ...b, role: brief.role, progress: brief.progress } : b)));
+  };
+
   // Called when generation completes — updates in-place without changing navigation.
   const handleBriefCompleted = (brief: Brief) => {
     setBriefs((prev) => {
@@ -151,21 +157,48 @@ export default function PortalShell() {
       ]);
       if (!videosData.ok) return;
 
-      const redisBriefs: Brief[] = redisData.ok && redisData.briefs.length > 0 ? redisData.briefs : [];
+      const redisBriefs: Brief[] = redisData.ok ? (redisData.briefs ?? []) : [];
+      const completedTranslations: CompletedTranslation[] = videosData.translations ?? [];
+      const heygenVideos: Brief[] = (videosData.briefs as Brief[]).filter(
+        (b) => !deletedIdsRef.current.has(b.id)
+      );
+      console.log("[refresh] heygen videos:", heygenVideos);
+
+      // Index HeyGen results by brief ID for O(1) upsert lookup.
+      const heygenById = new Map(heygenVideos.map((b) => [b.id, b]));
+
+      // Upsert Redis entries: refresh video URL/status/title from HeyGen,
+      // but never overwrite sections or translationId.
+      const upserted = redisBriefs.map((b) => {
+        const fresh = heygenById.get(b.id);
+        if (!fresh) return b;
+        return {
+          ...b,
+          role: fresh.role,   // HeyGen-generated title takes precedence
+          status: fresh.status,
+          videos: b.videos.map((v, i) => ({
+            ...v,  // preserves translationId, sections ref, blob_url, etc.
+            url:         fresh.videos[i]?.url         ?? v.url,
+            video_url:   fresh.videos[i]?.video_url   ?? v.video_url,
+            status:      fresh.videos[i]?.status      ?? v.status,
+            duration:    fresh.videos[i]?.duration    ?? v.duration,
+            credit_cost: fresh.videos[i]?.credit_cost ?? v.credit_cost,
+          })),
+        };
+      });
+
+      // Net-new HeyGen entries not in Redis yet.
+      const redisIds = new Set(upserted.map((b) => b.id));
+      const newEntries = heygenVideos.filter((b) => !redisIds.has(b.id));
 
       setBriefs((prev) => {
-        // Demo briefs live only in client state (never persisted); keep them.
         const demoBriefs = prev.filter((b) => b.id.startsWith("brief-demo-"));
-        const formBriefs = [...demoBriefs, ...redisBriefs];
-        const trackedUrls = new Set(
-          formBriefs.flatMap((b) => b.videos.map((v) => v.url)).filter(Boolean)
+        const next = applyCompletedTranslations(
+          [...demoBriefs, ...upserted, ...newEntries],
+          completedTranslations
         );
-        const fresh = (videosData.briefs as Brief[]).filter(
-          (b) =>
-            !deletedIdsRef.current.has(b.id) &&
-            !b.videos.some((v) => v.url && trackedUrls.has(v.url))
-        );
-        return [...formBriefs, ...fresh];
+        saveBriefs(next);
+        return next;
       });
     } catch (err) {
       console.error("[refresh] failed:", err);
@@ -200,7 +233,7 @@ export default function PortalShell() {
               exit={{ opacity: 0, x: -16 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
             >
-              <BriefForm onBriefAdded={handleBriefAdded} onBriefCompleted={handleBriefCompleted} />
+              <BriefForm onBriefAdded={handleBriefAdded} onBriefUpdated={handleBriefUpdated} onBriefCompleted={handleBriefCompleted} />
             </motion.div>
           ) : selectedBrief ? (
             <motion.div

@@ -33,10 +33,11 @@ const fieldVariants = {
 
 interface BriefFormProps {
   onBriefAdded?: (brief: Brief) => void;
+  onBriefUpdated?: (brief: Brief) => void;
   onBriefCompleted?: (brief: Brief) => void;
 }
 
-export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormProps) {
+export default function BriefForm({ onBriefAdded, onBriefUpdated, onBriefCompleted }: BriefFormProps) {
   const [role, setRole] = useState<(typeof ROLES)[number]>("Account Executive");
   const [languages, setLanguages] = useState<string[]>(["English"]);
   const [sections, setSections] = useState<Partial<Record<SectionKey, string>>>({});
@@ -47,6 +48,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
   const [voiceId, setVoiceId] = useState<string>(VOICES_EN[0].id);
   const [demoOpen, setDemoOpen] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [progress, setProgress] = useState<number | null>(null);
   const submitting = useRef(false);
 
   const isValid =
@@ -134,6 +136,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
       let credit_cost: number | undefined;
       let duration: number | undefined;
       let translationMap: Record<string, string> = {};
+      let resolvedRole = role; // updated when HeyGen assigns a title
 
       const MAX_POLLS = 900; // 60 min hard ceiling — rely on HeyGen's failed signal, not this cap
       for (let poll = 0; poll < MAX_POLLS; poll++) {
@@ -147,6 +150,12 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
             setStatus("error");
             return;
           }
+          // Propagate title + progress on every tick
+          if (data.title && data.title !== resolvedRole) {
+            resolvedRole = data.title;
+            onBriefUpdated?.({ id: briefId, role: resolvedRole, language: primaryLanguage, status: "rendering", createdAt: "Just now", sections: sections as Record<string, string>, jobId, videos: languages.map((lang) => ({ language: lang, url: null, video_url: null, blob_url: null, status: "rendering" as const })), progress: data.progress ?? undefined });
+          }
+          if (data.progress != null) setProgress(data.progress);
           if (data.status === "completed") {
             video_url = data.video_url;
             video_id = data.video_id;
@@ -167,11 +176,12 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
       }
 
       setStatus("complete");
+      setProgress(null);
 
       // Update the existing sidebar entry in-place — no navigation side-effect.
       onBriefCompleted?.({
         id: briefId,
-        role,
+        role: resolvedRole,
         language: primaryLanguage,
         status: "completed",
         createdAt: "Just now",
@@ -197,6 +207,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
     setStatus("idle");
     setErrorMessage(null);
     setRetryAfter(0);
+    setProgress(null);
   };
 
   // Elapsed timer — runs while generating, resets on idle/error/complete
@@ -620,6 +631,28 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
                     </motion.div>
                   );
                 })}
+
+                {/* HeyGen progress bar — visible while rendering, once progress > 0 */}
+                {progress != null && progress > 0 && status !== "complete" && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="pt-2"
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs text-muted">Render progress</span>
+                      <span className="text-xs font-semibold text-foreground">{progress}%</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                      <motion.div
+                        className="h-full bg-blue rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                      />
+                    </div>
+                  </motion.div>
+                )}
               </div>
             )}
 

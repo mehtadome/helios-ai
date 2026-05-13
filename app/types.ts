@@ -30,5 +30,6 @@ export interface Brief {
   createdAt: string;
   sections: Record<string, string>;
   videos: VideoVariant[];
-  jobId?: string;  // HeyGen session ID — persisted while rendering so polling can resume on reload
+  jobId?: string;    // HeyGen session ID — persisted while rendering so polling can resume on reload
+  progress?: number; // 0–100 from HeyGen session poll — shown as progress bar while generating
 }

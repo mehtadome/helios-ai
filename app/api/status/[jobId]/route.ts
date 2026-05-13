@@ -40,12 +40,12 @@ export async function GET(
   }
 
   const sessionData = await sessionRes.json();
-  const { status: sessionStatus, video_id } = sessionData?.data ?? {};
-  console.log(`[status:${jobId}] session status: ${sessionStatus}${video_id ? `, video_id: ${video_id}` : ""}`);
+  const { status: sessionStatus, video_id, title, progress } = sessionData?.data ?? {};
+  console.log(`[status:${jobId}] session status: ${sessionStatus}${video_id ? `, video_id: ${video_id}` : ""}${progress != null ? `, progress: ${progress}` : ""}`);
 
   // Still thinking/generating — no video_id yet
   if (!video_id) {
-    return NextResponse.json({ ok: true, status: mapStatus(sessionStatus), video_url: null });
+    return NextResponse.json({ ok: true, status: mapStatus(sessionStatus), video_url: null, title, progress });
   }
 
   // Step 2 — video_id exists, poll video for final URL
@@ -84,7 +84,7 @@ export async function GET(
   }
 
   if (videoStatus !== "completed") {
-    return NextResponse.json({ ok: true, status: "rendering" as BriefStatus, video_url: null });
+    return NextResponse.json({ ok: true, status: "rendering" as BriefStatus, video_url: null, title, progress: 100 });
   }
 
   console.log(`[status:${jobId}] completed — video_url: ${video_url}`);
