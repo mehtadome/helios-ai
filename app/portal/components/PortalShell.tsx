@@ -9,6 +9,7 @@ import BriefForm from "@/app/components/BriefForm";
 import AccountPopover from "./AccountPopover";
 import { INITIAL_BRIEFS } from "@/app/lib/mock-data";
 import { resumePoll } from "@/app/lib/resumePoll";
+import { startTranslationPolling } from "@/app/lib/startTranslationPolling";
 
 export default function PortalShell() {
   const [briefs, setBriefs] = useState<Brief[]>(INITIAL_BRIEFS);
@@ -76,7 +77,14 @@ export default function PortalShell() {
             saveBriefs(next);
             return next;
           });
+          startTranslationPolling(updated, applyBriefUpdate);
         });
+      }
+
+      // Resume translation polling for briefs whose master completed before reload
+      // but whose translation videos haven't resolved yet.
+      for (const brief of merged) {
+        startTranslationPolling(brief, applyBriefUpdate);
       }
     }
     init();
@@ -101,6 +109,14 @@ export default function PortalShell() {
     }).catch((err) => console.error("[briefs] persist failed:", err));
   }
 
+  function applyBriefUpdate(briefId: string, updater: (b: Brief) => Brief) {
+    setBriefs((prev) => {
+      const next = prev.map((b) => (b.id === briefId ? updater(b) : b));
+      saveBriefs(next);
+      return next;
+    });
+  }
+
   // Called the moment generation starts — adds to sidebar, selects it, and immediately persists
   // (can't wait for the effect since redisReady may still be false at this point).
   const handleBriefAdded = (brief: Brief) => {
@@ -119,6 +135,7 @@ export default function PortalShell() {
       saveBriefs(next);
       return next;
     });
+    startTranslationPolling(brief, applyBriefUpdate);
   };
 
   const handleRefresh = async () => {

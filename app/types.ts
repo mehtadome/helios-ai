@@ -17,6 +17,7 @@ export interface VideoVariant {
   blob_url: string | null;   // customer-owned storage URL — permanent once set
   status: "rendering" | "completed" | "failed";
   video_id?: string;         // HeyGen video_id — stable identifier used to re-derive URL and re-dispatch translations
+  translationId?: string;    // HeyGen translation video ID — used to poll translation completion
   duration?: number;
   credit_cost?: number;
 }

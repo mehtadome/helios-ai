@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { VOICE_IDS } from "@/app/lib/constants";
 import type { BriefStatus } from "@/app/types";
 
 // HeyGen session status → our BriefStatus
@@ -105,30 +104,35 @@ export async function GET(
     ? allLanguages.filter((l) => l !== primaryLanguage)
     : [];
 
+  const translationMap: Record<string, string> = {};
   const translationIds: string[] = [];
 
   if (translationLanguages.length > 0) {
     console.log(`[status:${jobId}] dispatching translations for: ${translationLanguages.join(", ")}`);
     try {
-      const translateRes = await fetch("https://api.heygen.com/v3/video-translate", {
+      const translateRes = await fetch("https://api.heygen.com/v3/video-translations", {
         method: "POST",
         headers: { "X-Api-Key": apiKey, "Content-Type": "application/json" },
         body: JSON.stringify({
-          video_id,
-          languages: translationLanguages.map((lang) => ({
-            language: lang,
-            voice_id: VOICE_IDS[lang],
-          })),
+          video: { type: "url", url: video_url },
+          output_languages: translationLanguages,
         }),
       });
 
       if (translateRes.ok) {
         const translateData = await translateRes.json();
-        const ids: string[] = translateData?.data?.translation_ids ?? [];
-        translationIds.push(...ids);
-        console.log(`[status:${jobId}] translation IDs: ${ids.join(", ")}`);
+        const ids: string[] = translateData?.data?.video_translation_ids ?? [];
+        // IDs are ordered to match output_languages
+        translationLanguages.forEach((lang, i) => {
+          if (ids[i]) {
+            translationIds.push(ids[i]);
+            translationMap[lang] = ids[i];
+            console.log(`[status:${jobId}] ${lang} translation ID: ${ids[i]}`);
+          }
+        });
       } else {
-        console.warn(`[status:${jobId}] translation dispatch returned ${translateRes.status}`);
+        const text = await translateRes.text();
+        console.warn(`[status:${jobId}] translation dispatch returned ${translateRes.status}: ${text}`);
       }
     } catch (err) {
       console.error(`[status:${jobId}] translation dispatch error:`, err);
@@ -142,6 +146,7 @@ export async function GET(
     video_url,
     video_id,
     translation_ids: translationIds,
+    translation_map: translationMap,
     duration,
     credit_cost,
   });
