@@ -27,6 +27,10 @@ const FEATURES = [
     title: "CMS / Highspot sync",
     description: "Pull brief content directly from existing content systems. Completed videos auto-publish to Highspot or Seismic.",
   },
+  {
+    title: "LLM ingestion",
+    description: "Generate English master → translate for remaining languages in batch. 1 generation + N translations vs. N+1 generations — ~5× cheaper on HeyGen credits.",
+  },
 ];
 
 export default function EnhancementsSection() {

@@ -64,11 +64,11 @@ export default function Tier0Diagram() {
       <rect x="456.5" y="58" width="106" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
       <text x="509.5" y="70" textAnchor="middle" fontSize="9.5" fill={label}>POST /api/generate</text>
 
-      {/* 3 · HeyGen → Next.js (arc — /api/status poll) */}
-      <path d="M 641,84 C 641,164 370,164 370,84"
+      {/* 3 · HeyGen → Next.js (elbow — /api/status poll) */}
+      <path d="M 641,84 L 641,108 L 370,108 L 370,84"
         stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr)" />
-      <rect x="438" y="136" width="130" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="503" y="148" textAnchor="middle" fontSize="9.5" fill={label}>/api/status · 4s poll</text>
+      <rect x="438" y="112" width="130" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="503" y="124" textAnchor="middle" fontSize="9.5" fill={label}>/api/status · 4s poll</text>
 
       {/* 4 · Next.js → Browser (video_url) */}
       <line x1="286" y1="62" x2="148" y2="62" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr)" />
@@ -84,8 +84,8 @@ export default function Tier0Diagram() {
       {/* 6 · Next.js → On-Premise (elbow, right branch) */}
       <path d="M 406,84 L 406,184 L 504,184 L 504,212"
         stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr)" />
-      <rect x="416" y="175" width="92" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="462" y="187" textAnchor="middle" fontSize="9.5" fill={label}>/api/push-video</text>
+      <rect x="416" y="165" width="92" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="462" y="177" textAnchor="middle" fontSize="9.5" fill={label}>/api/push-video</text>
     </svg>
   );
 }

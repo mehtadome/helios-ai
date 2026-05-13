@@ -10,7 +10,6 @@ import {
   ARCH_DECISIONS,
   TIER1_DECISIONS,
   TIER2_DECISIONS,
-  CONCERNS,
   TECH_TABLE,
 } from "./data";
 
@@ -92,26 +91,6 @@ export default function ArchitecturePage() {
         />
 
         {/* Cross-cutting concerns */}
-        <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={0}
-          className="mt-16"
-        >
-          <h2 className="text-2xl font-black text-foreground tracking-tight mb-2">Cross-cutting concerns</h2>
-          <p className="text-sm text-muted mb-8">Applies across all tiers.</p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {CONCERNS.map((c, i) => (
-              <motion.div
-                key={c.title}
-                variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i * 0.4}
-                className="flex flex-col gap-2 p-5 rounded-2xl border border-border"
-              >
-                <span className="text-sm font-semibold text-foreground">{c.title}</span>
-                <p className="text-xs text-muted leading-relaxed">{c.body}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
         {/* Technology decisions table */}
         <motion.div
           variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={0}
