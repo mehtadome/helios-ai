@@ -123,6 +123,132 @@ function Tier0Diagram() {
 }
 
 // ---------------------------------------------------------------------------
+// Tier 1 SVG diagram
+// ---------------------------------------------------------------------------
+
+function Tier1Diagram() {
+  const stroke  = "#e2e8f0";
+  const arrow   = "#94a3b8";
+  const label   = "#64748b";
+  const heading = "#0f172a";
+
+  // Top row — same geometry as T0
+  // Browser:  x=20,  y=28, w=128, h=56  → right (148,50) bottom (84,84)
+  // Next.js:  x=290, y=28, w=168, h=56  → left (290,50) right (458,50) bottom-center (374,84)
+  // HeyGen:   x=572, y=28, w=150, h=56  → left (572,50) bottom-center (647,84)
+  //
+  // Bottom row — 3 nodes, spread wide so horizontal label segments fit:
+  // Postgres: x=30,  y=215, w=148, h=56 → top-center (104,215)
+  // Redis:    x=198, y=215, w=158, h=56 → top-center (277,215)
+  // On-Prem:  x=448, y=215, w=196, h=56 → top-center (546,215)
+
+  return (
+    <svg
+      viewBox="0 0 780 294"
+      width="100%"
+      style={{ fontFamily: "inherit", overflow: "visible" }}
+    >
+      <defs>
+        <marker id="arr1" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill={arrow} />
+        </marker>
+        <filter id="ns1" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2.5" floodOpacity="0.07" />
+        </filter>
+      </defs>
+
+      {/* ── Nodes ─────────────────────────────────────────────────────────── */}
+
+      {/* Browser */}
+      <g filter="url(#ns1)">
+        <rect x="20" y="28" width="128" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+      </g>
+      <text x="84" y="53" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Browser</text>
+      <text x="84" y="70" textAnchor="middle" fontSize="10" fill={label}>Client</text>
+
+      {/* Next.js / Vercel */}
+      <g filter="url(#ns1)">
+        <rect x="290" y="28" width="168" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+      </g>
+      <text x="374" y="53" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Next.js / Vercel</text>
+      <text x="374" y="70" textAnchor="middle" fontSize="10" fill={label}>Integration layer</text>
+
+      {/* HeyGen */}
+      <g filter="url(#ns1)">
+        <rect x="572" y="28" width="150" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+      </g>
+      <text x="647" y="53" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>HeyGen</text>
+      <text x="647" y="70" textAnchor="middle" fontSize="10" fill={label}>Video Agent API v3</text>
+
+      {/* Postgres */}
+      <g filter="url(#ns1)">
+        <rect x="30" y="215" width="148" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+      </g>
+      <text x="104" y="240" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Postgres</text>
+      <text x="104" y="257" textAnchor="middle" fontSize="10" fill={label}>job metadata</text>
+
+      {/* Redis (TTL) */}
+      <g filter="url(#ns1)">
+        <rect x="198" y="215" width="158" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+      </g>
+      <text x="277" y="240" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Redis</text>
+      <text x="277" y="257" textAnchor="middle" fontSize="10" fill={label}>TTL cache · rate limit</text>
+
+      {/* On-Premise Storage */}
+      <g filter="url(#ns1)">
+        <rect x="448" y="215" width="196" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+      </g>
+      <text x="546" y="240" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>On-Premise Storage</text>
+      <text x="546" y="257" textAnchor="middle" fontSize="10" fill={label}>auto-push on complete</text>
+
+      {/* ── Arrows ────────────────────────────────────────────────────────── */}
+
+      {/* 1 · Browser → Next.js  (Clerk SSO) */}
+      <line x1="148" y1="50" x2="290" y2="50"
+        stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      <rect x="170" y="33" width="80" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="210" y="45" textAnchor="middle" fontSize="9.5" fill={label}>Clerk SSO</text>
+
+      {/* 2 · Next.js → HeyGen */}
+      <line x1="458" y1="50" x2="572" y2="50"
+        stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      <rect x="464" y="33" width="106" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="517" y="45" textAnchor="middle" fontSize="9.5" fill={label}>POST /api/generate</text>
+
+      {/* 3 · HeyGen → Next.js  (webhook push, arc) */}
+      <path d="M 647,84 C 647,164 374,164 374,84"
+        stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr1)" />
+      <rect x="434" y="136" width="136" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="502" y="148" textAnchor="middle" fontSize="9.5" fill={label}>webhook · callback_url</text>
+
+      {/* 4 · Next.js → Browser  (SSE stream) */}
+      <line x1="290" y1="62" x2="148" y2="62"
+        stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      <rect x="183" y="64" width="70" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="218" y="76" textAnchor="middle" fontSize="9.5" fill={label}>SSE stream</text>
+
+      {/* 5 · Next.js → Postgres  (elbow left, wide arc for label room) */}
+      <path d="M 315,84 L 315,188 L 104,188 L 104,215"
+        stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr1)" />
+      <rect x="165" y="179" width="88" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="209" y="191" textAnchor="middle" fontSize="9.5" fill={label}>job metadata</text>
+
+      {/* 6 · Next.js → Redis  (elbow, label on vertical) */}
+      <path d="M 374,84 L 374,188 L 277,188 L 277,215"
+        stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr1)" />
+      <rect x="378" y="118" width="64" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="410" y="130" textAnchor="middle" fontSize="9.5" fill={label}>TTL cache</text>
+
+      {/* 7 · Next.js → On-Premise  (elbow right) */}
+      <path d="M 435,84 L 435,188 L 546,188 L 546,215"
+        stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr1)" />
+      <rect x="448" y="179" width="86" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="491" y="191" textAnchor="middle" fontSize="9.5" fill={label}>auto-push MP4</text>
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Data
 // ---------------------------------------------------------------------------
 
@@ -138,6 +264,21 @@ const ARCH_DECISIONS = [
   {
     label: "60-min timeout",
     detail: "MAX_POLLS ceiling · relies on HeyGen's own failed signal, not a timer",
+  },
+];
+
+const TIER1_DECISIONS = [
+  {
+    label: "Clerk SSO",
+    detail: "SAML / OIDC / WorkOS — org-scoped sessions; HeyGen API key stays server-side only",
+  },
+  {
+    label: "Postgres (Neon)",
+    detail: "orgs · users · briefs · jobs schema; row-level security by org_id; status tracked in DB",
+  },
+  {
+    label: "Webhook delivery",
+    detail: "HeyGen POSTs to /api/webhook on completion; HMAC-SHA256 verified; MP4 auto-pushed — no manual download, no Vercel Blob",
   },
 ];
 
@@ -265,25 +406,13 @@ export default function ArchitecturePage() {
         >
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue/10 text-blue">Tier 0</span>
-            <h2 className="text-lg font-black text-foreground tracking-tight">POC</h2>
+            <h2 className="text-lg font-black text-foreground tracking-tight">Proof of Concept (POC)</h2>
           </div>
-          <p className="text-sm text-muted mb-6">Brief in → video URL out, demo-ready.</p>
+          <p className="text-sm text-muted mb-6">Brief in → video URL out.</p>
 
           {/* Diagram */}
           <div className="bg-gray-50/60 rounded-xl border border-border p-4 mb-6">
             <Tier0Diagram />
-          </div>
-
-          {/* Stack */}
-          <div className="mb-5">
-            <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Stack</p>
-            <ul className="space-y-1">
-              {["HeyGen Video Agent API v3", "REST polling every 4s (session → video → URL)", "Redis rate limiting per IP (helios:cooldown:{ip})", "Brief persistence via Redis (helios:briefs)"].map((a) => (
-                <li key={a} className="flex items-start gap-2 text-xs text-foreground leading-relaxed">
-                  <span className="text-muted mt-0.5">–</span>{a}
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Arch decisions */}
@@ -299,14 +428,39 @@ export default function ArchitecturePage() {
             </div>
           </div>
 
-          <p className="text-xs text-muted italic mt-5">
-            Intentionally skips: auth, queuing, CDN, monitoring, owned storage.
-          </p>
         </motion.div>
 
-        {/* ── Tier 1 + 2 ── */}
+        {/* ── Tier 1 ── */}
+        <motion.div
+          variants={fadeUp} initial="hidden" animate="show" custom={2}
+          className="rounded-2xl border border-purple-100 p-6 mb-6"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-50 text-purple-600">Tier 1</span>
+            <h2 className="text-lg font-black text-foreground tracking-tight">Production</h2>
+          </div>
+          <p className="text-sm text-muted mb-6">Authentication, job persistence, and direct on-premise delivery.</p>
+
+          <div className="bg-gray-50/60 rounded-xl border border-border p-4 mb-6">
+            <Tier1Diagram />
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Arch decisions</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {TIER1_DECISIONS.map((d) => (
+                <div key={d.label} className="flex flex-col gap-1 p-3 bg-white rounded-xl border border-border">
+                  <span className="text-xs font-semibold text-foreground">{d.label}</span>
+                  <span className="text-xs text-muted leading-relaxed">{d.detail}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── Tier 2 ── */}
         <div className="space-y-6">
-          {HIGHER_TIERS.map((tier, i) => (
+          {HIGHER_TIERS.filter(t => t.id !== "T1").map((tier, i) => (
             <motion.div
               key={tier.id}
               variants={fadeUp} initial="hidden" animate="show" custom={i + 2}
