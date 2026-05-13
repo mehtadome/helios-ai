@@ -61,8 +61,8 @@ export default function Tier0Diagram() {
 
       {/* 2 · Next.js → HeyGen */}
       <line x1="454" y1="50" x2="566" y2="50" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr)" />
-      <rect x="460" y="33" width="106" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="513" y="45" textAnchor="middle" fontSize="9.5" fill={label}>POST /api/generate</text>
+      <rect x="456.5" y="58" width="106" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="509.5" y="70" textAnchor="middle" fontSize="9.5" fill={label}>POST /api/generate</text>
 
       {/* 3 · HeyGen → Next.js (arc — /api/status poll) */}
       <path d="M 641,84 C 641,164 370,164 370,84"
