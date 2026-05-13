@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Brief } from "@/app/types";
 import { STATUS_CONFIG } from "@/app/lib/constants";
+import { formatRelative } from "@/app/lib/utils";
 
 interface Props {
   briefs: Brief[];
@@ -115,7 +116,7 @@ export default function BriefSidebar({ briefs, selectedId, onSelect, onNew, onRe
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-muted flex-shrink-0 pt-0.5">{brief.createdAt}</span>
+                  <span className="text-xs text-muted flex-shrink-0 pt-0.5">{formatRelative(brief.createdAt)}</span>
                 </div>
               </motion.button>
             );

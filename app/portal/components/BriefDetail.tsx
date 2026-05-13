@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Brief } from "@/app/types";
 import { SECTION_LABELS } from "@/app/lib/constants";
+import { formatRelative } from "@/app/lib/utils";
 import DownloadModal from "./DownloadModal";
 
 // ---------------------------------------------------------------------------
@@ -220,7 +221,7 @@ export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelet
             {brief.role} Brief
             {brief.videos.length === 1 ? ` — ${brief.language}` : brief.videos.length > 1 ? ` — ${brief.videos.length} languages` : ""}
           </h1>
-          <p className="text-xs text-muted mt-1">Submitted {brief.createdAt}</p>
+          <p className="text-xs text-muted mt-1">Submitted {formatRelative(brief.createdAt)}</p>
         </div>
       </div>
 

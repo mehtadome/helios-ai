@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Brief, DemoBrief } from "@/app/types";
+import { formatRelative } from "@/app/lib/utils";
 import {
   ROLES,
   LANGUAGES,
@@ -109,6 +110,7 @@ export default function BriefForm({ onBriefAdded, onBriefUpdated, onBriefComplet
       }
 
       setStatus("rendering");
+      const submittedAt = new Date().toISOString();
 
       // Add to sidebar immediately so the user can navigate away and submit another brief.
       // The async poll loop below continues even if this component unmounts.
@@ -117,7 +119,7 @@ export default function BriefForm({ onBriefAdded, onBriefUpdated, onBriefComplet
         role,
         language: primaryLanguage,
         status: "rendering",
-        createdAt: "Just now",
+        createdAt: submittedAt,
         sections: sections as Record<string, string>,
         jobId,
         videos: languages.map((lang) => ({
@@ -155,7 +157,7 @@ export default function BriefForm({ onBriefAdded, onBriefUpdated, onBriefComplet
           // Propagate title + progress on every tick
           if (data.title && data.title !== resolvedRole) {
             resolvedRole = data.title;
-            onBriefUpdated?.({ id: briefId, role: resolvedRole, language: primaryLanguage, status: "rendering", createdAt: "Just now", sections: sections as Record<string, string>, jobId, videos: languages.map((lang) => ({ language: lang, url: null, video_url: null, blob_url: null, status: "rendering" as const })), progress: data.progress ?? undefined });
+            onBriefUpdated?.({ id: briefId, role: resolvedRole, language: primaryLanguage, status: "rendering", createdAt: submittedAt, sections: sections as Record<string, string>, jobId, videos: languages.map((lang) => ({ language: lang, url: null, video_url: null, blob_url: null, status: "rendering" as const })), progress: data.progress ?? undefined });
           }
           if (data.progress != null) setProgress(data.progress);
           if (data.status === "completed") {
@@ -186,7 +188,7 @@ export default function BriefForm({ onBriefAdded, onBriefUpdated, onBriefComplet
         role: resolvedRole,
         language: primaryLanguage,
         status: "completed",
-        createdAt: "Just now",
+        createdAt: submittedAt,
         sections: sections as Record<string, string>,
         videos: languages.map((lang) => ({
           language: lang,
