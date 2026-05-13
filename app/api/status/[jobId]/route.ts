@@ -69,7 +69,8 @@ export async function GET(
   }
 
   const videoData = await videoRes.json();
-  const { status: videoStatus, video_url, failure_code, failure_message } = videoData?.data ?? {};
+  const { status: videoStatus, video_url, failure_code, failure_message, duration } = videoData?.data ?? {};
+  const credit_cost = typeof duration === "number" ? Math.ceil(duration / 60) : undefined;
   console.log(`[status:${jobId}] video status: ${videoStatus}`);
 
   if (videoStatus === "failed") {
@@ -141,5 +142,7 @@ export async function GET(
     video_url,
     video_id,
     translation_ids: translationIds,
+    duration,
+    credit_cost,
   });
 }

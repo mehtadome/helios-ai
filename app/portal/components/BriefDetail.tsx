@@ -139,7 +139,13 @@ function VideoPlaceholder({
 // ---------------------------------------------------------------------------
 
 export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelete?: (id: string) => void }) {
-  const [activeLanguage, setActiveLanguage] = useState(brief.videos[0]?.language ?? brief.language);
+  const sortedVideos = [...brief.videos].sort((a, b) =>
+    a.status === "completed" && b.status !== "completed" ? -1 :
+    a.status !== "completed" && b.status === "completed" ? 1 : 0
+  );
+  const [activeLanguage, setActiveLanguage] = useState(
+    sortedVideos.find((v) => v.status === "completed")?.language ?? sortedVideos[0]?.language ?? brief.language
+  );
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [downloadTarget, setDownloadTarget] = useState<{ language: string; url: string | null } | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -219,9 +225,9 @@ export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelet
       </div>
 
       {/* Language tabs */}
-      {brief.videos.length > 0 && (
+      {sortedVideos.length > 0 && (
         <div className="flex items-center gap-1 p-1 rounded-xl border border-border bg-gray-50 w-fit mb-5">
-          {brief.videos.map((v) => (
+          {sortedVideos.map((v) => (
             <button
               key={v.language}
               onClick={() => setActiveLanguage(v.language)}
@@ -260,6 +266,12 @@ export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelet
               setDownloadTarget({ language: activeLanguage, url: activeVideo?.url ?? null })
             }
           />
+          {activeVideo?.credit_cost != null && (
+            <p className="text-xs text-muted mt-2">
+              {activeVideo.credit_cost} HeyGen credit{activeVideo.credit_cost !== 1 ? "s" : ""}
+              {activeVideo.duration != null && ` · ${Math.round(activeVideo.duration)}s`}
+            </p>
+          )}
         </motion.div>
       </AnimatePresence>
 

@@ -16,6 +16,8 @@ export interface VideoVariant {
   video_url: string | null;  // HeyGen-hosted CDN URL — ephemeral, may expire
   blob_url: string | null;   // customer-owned storage URL — permanent once set
   status: "rendering" | "completed" | "failed";
+  duration?: number;         // video duration in seconds, from HeyGen /v3/videos/{id}
+  credit_cost?: number;      // HeyGen credits consumed — Math.ceil(duration / 60)
 }
 
 export interface Brief {
