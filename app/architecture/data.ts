@@ -9,11 +9,11 @@ export const ARCH_DECISIONS = [
   },
   {
     label: "Failure handling",
-    detail: "HeyGen failed: failure_code stored, retry queued with backoff. HeyGen 429: QStash exponential backoff, throughput cap auto-lowered. Webhook timeout: cron fallback polls every 5 min.",
+    detail: "HeyGen failed: failure_code surfaced to UI, user re-submits. HeyGen 429: Retry-After header extracted and returned to client; UI shows live countdown. Transient errors: poll loop breaks and surfaces error banner.",
   },
   {
-    label: "Cost tracking (TODO)",
-    detail: "Each job row captures heygen_credit_cost and render_time_s. Neon view: monthly_cost_by_org surfaced in internal dashboard. Alert on org budget threshold breach.",
+    label: "Cost tracking",
+    detail: "Each video captures heygen_credit_cost (ceil(duration / 60)) and render duration from the HeyGen API response. Displayed per-video in the portal. Tier 1: persisted per job in Postgres with org-level rollup.",
   },
 ];
 
