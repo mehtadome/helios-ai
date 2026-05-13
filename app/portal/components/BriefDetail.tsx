@@ -36,11 +36,13 @@ function VideoPlaceholder({
   language,
   status,
   url,
+  duration,
   onDownloadClick,
 }: {
   language: string;
   status: string;
   url: string | null;
+  duration?: number;
   onDownloadClick: () => void;
 }) {
   if (url) {
@@ -120,7 +122,7 @@ function VideoPlaceholder({
             <span className="w-1.5 h-1.5 rounded-full bg-blue" />
             <span className="text-xs font-medium text-white/80">{language}</span>
           </div>
-          <span className="text-xs text-white/60">73s · MP4</span>
+          <span className="text-xs text-white/60">{duration ? `${Math.round(duration)}s · MP4` : "MP4"}</span>
         </div>
 
         {/* "Connect API" overlay message */}
@@ -263,6 +265,7 @@ export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelet
             language={activeLanguage}
             status={activeVideo?.status ?? "completed"}
             url={activeVideo?.url ?? null}
+            duration={activeVideo?.duration}
             onDownloadClick={() =>
               setDownloadTarget({ language: activeLanguage, url: activeVideo?.url ?? null })
             }
