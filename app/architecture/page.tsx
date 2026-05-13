@@ -68,6 +68,7 @@ export default function ArchitecturePage() {
           diagram={<Tier0Diagram />}
           decisions={ARCH_DECISIONS}
           motionCustom={1}
+          current
         />
         <TierCard
           label="Tier 1"

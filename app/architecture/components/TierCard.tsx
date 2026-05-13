@@ -18,6 +18,7 @@ interface TierCardProps {
   badgeClass: string;
   borderClass: string;
   title: string;
+  current?: boolean;
   subtitle: string;
   diagram: React.ReactNode;
   decisions: Decision[];
@@ -33,6 +34,7 @@ export default function TierCard({
   diagram,
   decisions,
   motionCustom,
+  current,
 }: TierCardProps) {
   return (
     <motion.div
@@ -45,6 +47,11 @@ export default function TierCard({
       <div className="flex items-center gap-2 mb-1">
         <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${badgeClass}`}>{label}</span>
         <h2 className="text-lg font-black text-foreground tracking-tight">{title}</h2>
+        {current && (
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-100">
+            Current
+          </span>
+        )}
       </div>
       <p className="text-sm text-muted mb-6">{subtitle}</p>
 
