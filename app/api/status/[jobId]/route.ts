@@ -90,9 +90,10 @@ export async function GET(
   console.log(`[status:${jobId}] completed — video_url: ${video_url}`);
 
   // Step 3 — master complete. Fan out translations only when ?dispatch=1 is present.
-  // This is the idempotency guard: only the initial BriefForm poll loop sends dispatch=1.
-  // Any subsequent status check (BriefDetail, webhook handler, etc.) omits it,
-  // preventing duplicate translation batches being sent to HeyGen for the same job.
+  // Both BriefForm and resumePoll send dispatch=1, so a page reload mid-generation can
+  // trigger a second dispatch for the same video — known POC limitation. The tradeoff is
+  // intentional: a properly mapped translationId (even from a duplicate dispatch) is better
+  // than losing the link entirely. Full fix requires server-side idempotency keyed on video_id.
   const shouldDispatch = req.nextUrl.searchParams.get("dispatch") === "1";
   const languagesParam = req.nextUrl.searchParams.get("languages");
   let allLanguages: string[] = [];
