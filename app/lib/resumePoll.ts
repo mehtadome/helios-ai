@@ -24,6 +24,7 @@ export async function resumePoll(brief: Brief, onUpdate: (updated: Brief) => voi
       }
 
       if (data.status === "completed") {
+        const translationMap: Record<string, string> = data.translation_map ?? {};
         onUpdate({
           ...brief,
           status: "completed",
@@ -36,6 +37,9 @@ export async function resumePoll(brief: Brief, onUpdate: (updated: Brief) => voi
             video_url: v.language === primaryLanguage ? data.video_url : v.video_url,
             status: v.language === primaryLanguage ? ("completed" as const) : v.status,
             video_id: v.language === primaryLanguage ? data.video_id : v.video_id,
+            translationId: v.language !== primaryLanguage
+              ? (translationMap[v.language] ?? v.translationId)
+              : v.translationId,
             credit_cost: v.language === primaryLanguage ? data.credit_cost : v.credit_cost,
             duration: v.language === primaryLanguage ? data.duration : v.duration,
           })),
