@@ -117,6 +117,7 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
         status: "rendering",
         createdAt: "Just now",
         sections: sections as Record<string, string>,
+        jobId,
         videos: languages.map((lang) => ({
           language: lang,
           url: null,
@@ -129,8 +130,10 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
       // Poll until complete or failed
       const languagesParam = encodeURIComponent(JSON.stringify(languages));
       let video_url: string | null = null;
+      let video_id: string | undefined;
       let credit_cost: number | undefined;
       let duration: number | undefined;
+      let translationMap: Record<string, string> = {};
 
       const MAX_POLLS = 900; // 60 min hard ceiling — rely on HeyGen's failed signal, not this cap
       for (let poll = 0; poll < MAX_POLLS; poll++) {
@@ -146,8 +149,10 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
           }
           if (data.status === "completed") {
             video_url = data.video_url;
+            video_id = data.video_id;
             credit_cost = data.credit_cost;
             duration = data.duration;
+            translationMap = data.translation_map ?? {};
             break;
           }
         } catch {
@@ -177,6 +182,8 @@ export default function BriefForm({ onBriefAdded, onBriefCompleted }: BriefFormP
           video_url: lang === primaryLanguage ? video_url : null,
           blob_url: null,
           status: lang === primaryLanguage ? "completed" as const : "rendering" as const,
+          video_id: lang === primaryLanguage ? video_id : undefined,
+          translationId: lang !== primaryLanguage ? translationMap[lang] : undefined,
           credit_cost: lang === primaryLanguage ? credit_cost : undefined,
           duration: lang === primaryLanguage ? duration : undefined,
         })),

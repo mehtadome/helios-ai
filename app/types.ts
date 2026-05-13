@@ -16,8 +16,10 @@ export interface VideoVariant {
   video_url: string | null;  // HeyGen-hosted CDN URL — ephemeral, may expire
   blob_url: string | null;   // customer-owned storage URL — permanent once set
   status: "rendering" | "completed" | "failed";
-  duration?: number;         // video duration in seconds, from HeyGen /v3/videos/{id}
-  credit_cost?: number;      // HeyGen credits consumed — Math.ceil(duration / 60)
+  video_id?: string;         // HeyGen video_id — stable identifier used to re-derive URL and re-dispatch translations
+  translationId?: string;    // HeyGen translation video ID — used to poll translation completion
+  duration?: number;
+  credit_cost?: number;
 }
 
 export interface Brief {
@@ -28,4 +30,5 @@ export interface Brief {
   createdAt: string;
   sections: Record<string, string>;
   videos: VideoVariant[];
+  jobId?: string;  // HeyGen session ID — persisted while rendering so polling can resume on reload
 }

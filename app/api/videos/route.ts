@@ -21,10 +21,9 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: "HEYGEN_API_KEY not configured" }, { status: 500 });
   }
 
-  // Fetch video list from HeyGen
   let listRes: Response;
   try {
-    listRes = await fetch("https://api.heygen.com/v1/video.list?limit=100", {
+    listRes = await fetch("https://api.heygen.com/v3/videos?limit=100", {
       headers: { "X-Api-Key": apiKey },
     });
   } catch (err) {
@@ -38,57 +37,44 @@ export async function GET() {
   }
 
   const listData = await listRes.json();
-  const heygenVideos: { video_id: string; status: string; video_title: string; created_at: number }[] =
-    listData?.data?.videos ?? [];
+  const heygenVideos: { id: string; status: string; title: string; created_at: number; video_url: string | null; duration: number | null }[] =
+    listData?.data ?? [];
 
   console.log(`[videos] fetched ${heygenVideos.length} videos from HeyGen`);
-  heygenVideos.forEach((v) => console.log(`[videos]  id: ${v.video_id} | status: ${v.status} | title: ${v.video_title}`));
+  heygenVideos.forEach((v) => console.log(`[videos]  id: ${v.id} | status: ${v.status} | title: ${v.title}`));
 
-  // For each completed video, fetch the actual URL — N+1 but acceptable at POC scale.
-  // At production scale, store video_url in Postgres on webhook receipt instead.
-  const briefs: Brief[] = await Promise.all(
-    heygenVideos.map(async (v) => {
-      let videoUrl: string | null = null;
+  // Filter out translation videos — they appear with "Untitled-{Language}" titles and
+  // belong to parent briefs already tracked via brief-* entries.
+  const masterVideos = heygenVideos.filter((v) => !v.title?.startsWith("Untitled-"));
+  console.log(`[videos] ${masterVideos.length} master video(s) after filtering translations`);
 
-      let duration: number | undefined;
-      if (v.status === "completed") {
-        try {
-          const videoRes = await fetch(`https://api.heygen.com/v3/videos/${v.video_id}`, {
-            headers: { "X-Api-Key": apiKey },
-          });
-          if (videoRes.ok) {
-            const videoData = await videoRes.json();
-            videoUrl = videoData?.data?.video_url ?? null;
-            duration = videoData?.data?.duration ?? undefined;
-          }
-        } catch {
-          console.warn(`[videos] failed to fetch URL for ${v.video_id}`);
-        }
-      }
+  // v3 includes video_url and duration in the list response — no N+1 detail fetch needed.
+  const briefs: Brief[] = masterVideos.map((v) => {
+    const status = mapStatus(v.status);
+    const duration = v.duration ?? undefined;
+    const videoUrl = v.video_url ?? null;
+    const credit_cost = typeof duration === "number" ? Math.ceil(duration / 60) : undefined;
 
-      const status = mapStatus(v.status);
-      const credit_cost = typeof duration === "number" ? Math.ceil(duration / 60) : undefined;
-      const video: VideoVariant = {
-        language: "English",
-        url: videoUrl,
-        video_url: videoUrl,
-        blob_url: null,
-        status: status === "completed" || status === "failed" ? status : "rendering",
-        duration,
-        credit_cost,
-      };
+    const video: VideoVariant = {
+      language: "English",
+      url: videoUrl,
+      video_url: videoUrl,
+      blob_url: null,
+      status: status === "completed" || status === "failed" ? status : "rendering",
+      duration,
+      credit_cost,
+    };
 
-      return {
-        id: `heygen-${v.video_id}`,
-        role: v.video_title,
-        language: "English",
-        status,
-        createdAt: formatCreatedAt(v.created_at),
-        sections: {},
-        videos: [video],
-      };
-    })
-  );
+    return {
+      id: `heygen-${v.id}`,
+      role: v.title,
+      language: "English",
+      status,
+      createdAt: formatCreatedAt(v.created_at),
+      sections: {},
+      videos: [video],
+    };
+  });
 
   return NextResponse.json({ ok: true, briefs });
 }
