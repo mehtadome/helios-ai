@@ -17,26 +17,33 @@ export default function Tier1Diagram() {
 
       {/* ── Nodes ─────────────────────────────────────────────────────────── */}
 
-      {/* Browser: x=20, y=25, w=128, h=56 */}
+      {/* Browser: x=20, y=25, w=108, h=54 */}
       <g filter="url(#ns1)">
-        <rect x="20" y="25" width="128" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="20" y="25" width="108" height="54" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="84" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Browser</text>
-      <text x="84" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Client</text>
+      <text x="74" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Browser</text>
+      <text x="74" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Client</text>
 
-      {/* Next.js / Vercel: x=220, y=25, w=168, h=56 */}
+      {/* SSO: x=144, y=25, w=108, h=54 */}
       <g filter="url(#ns1)">
-        <rect x="220" y="25" width="168" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="144" y="25" width="108" height="54" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="304" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>App Server</text>
-      <text x="304" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Integration layer</text>
+      <text x="198" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>SSO</text>
+      <text x="198" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Helios IdP</text>
 
-      {/* HeyGen: x=530, y=25, w=148, h=56 */}
+      {/* App Server: x=268, y=25, w=148, h=54 */}
       <g filter="url(#ns1)">
-        <rect x="530" y="25" width="148" height="56" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="268" y="25" width="148" height="54" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="604" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>HeyGen</text>
-      <text x="604" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Video Agent API v3</text>
+      <text x="342" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>App Server</text>
+      <text x="342" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Integration layer</text>
+
+      {/* HeyGen: x=556, y=25, w=148, h=54 */}
+      <g filter="url(#ns1)">
+        <rect x="556" y="25" width="148" height="54" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+      </g>
+      <text x="630" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>HeyGen</text>
+      <text x="630" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Video Agent API v3</text>
 
       {/* Cache (Redis TTL): x=175, y=175, w=155, h=56 */}
       <g filter="url(#ns1)">
@@ -67,30 +74,36 @@ export default function Tier1Diagram() {
 
       {/* ── Arrows ────────────────────────────────────────────────────────── */}
 
-      {/* 1a · Browser → Next.js (no label) */}
-      <line x1="148" y1="47" x2="220" y2="47" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      {/* 1a · Browser → SSO (no label) */}
+      <line x1="128" y1="47" x2="144" y2="47" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
 
-      {/* 1b · Next.js → Browser (no label) */}
-      <line x1="220" y1="57" x2="148" y2="57" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      {/* 1b · SSO → Browser (no label) */}
+      <line x1="144" y1="57" x2="128" y2="57" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
 
-      {/* 2 · Next.js → HeyGen (no label) */}
-      <line x1="388" y1="47" x2="530" y2="47" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      {/* 2a · SSO → App Server (no label) */}
+      <line x1="252" y1="47" x2="268" y2="47" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
 
-      {/* 3 · HeyGen → Cache (elbow, label "TTL cache") */}
-      <path d="M 572,81 L 572,138 L 280,138 L 280,175"
+      {/* 2b · App Server → SSO (no label) */}
+      <line x1="268" y1="57" x2="252" y2="57" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+
+      {/* 3 · App Server → HeyGen (no label) */}
+      <line x1="416" y1="47" x2="556" y2="47" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+
+      {/* 4 · HeyGen → Cache (elbow, label "TTL cache") */}
+      <path d="M 598,79 L 598,138 L 252,138 L 252,175"
         stroke={arrow} strokeWidth="1.5" fill="none" markerEnd="url(#arr1)" />
-      <rect x="384" y="129" width="72" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="420" y="141" textAnchor="middle" fontSize="9.5" fill={lbl}>TTL cache</text>
+      <rect x="383" y="129" width="72" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="419" y="141" textAnchor="middle" fontSize="9.5" fill={lbl}>TTL cache</text>
 
-      {/* 4 · HeyGen → On-Premise (straight down, label "auto-push") */}
-      <line x1="624" y1="81" x2="624" y2="148" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
-      <rect x="630" y="106" width="70" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
-      <text x="665" y="118" textAnchor="middle" fontSize="9.5" fill={lbl}>auto-push</text>
+      {/* 5 · HeyGen → On-Premise (straight down, label "auto-push") */}
+      <line x1="650" y1="79" x2="650" y2="148" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      <rect x="656" y="106" width="70" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
+      <text x="691" y="118" textAnchor="middle" fontSize="9.5" fill={lbl}>auto-push</text>
 
-      {/* 5 · Next.js → Cache (straight down, no label) */}
-      <line x1="232" y1="81" x2="232" y2="175" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      {/* 6 · App Server → Cache (straight down, no label) */}
+      <line x1="280" y1="79" x2="280" y2="175" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
 
-      {/* 6 · Cache → Postgres (horizontal, label "2nd hit miss") */}
+      {/* 7 · Cache → Postgres (horizontal, label "2nd hit miss") */}
       <line x1="330" y1="203" x2="404" y2="203" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
       <rect x="330" y="193" width="82" height="16" rx="4" fill="white" stroke={stroke} strokeWidth="1" />
       <text x="371" y="205" textAnchor="middle" fontSize="9.5" fill={lbl}>2nd hit miss</text>
