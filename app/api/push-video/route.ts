@@ -29,6 +29,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid videoUrl" }, { status: 400 });
   }
 
+  const videoHostname = new URL(videoUrl).hostname;
+  if (!videoHostname.endsWith(".heygen.ai") && !videoHostname.endsWith(".heygen.com")) {
+    return NextResponse.json({ ok: false, error: "videoUrl must be a HeyGen CDN URL" }, { status: 400 });
+  }
+
   if (!URL.canParse(destination)) {
     return NextResponse.json({ ok: false, error: "Invalid destination URL" }, { status: 400 });
   }

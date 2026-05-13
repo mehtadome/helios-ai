@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
   // Generate primary-language master first; additional languages fan out via /v3/video-translations
   // after the master completes (see /api/status for translation dispatch).
   const primaryLanguage = languages.includes("English") ? "English" : languages[0];
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://helios-ai-eosin.vercel.app";
+  const baseUrl = process.env.BASE_URL ?? "https://helios-ai-eosin.vercel.app";
 
   const payload = {
     prompt:      buildPrompt(sections, role, primaryLanguage),
