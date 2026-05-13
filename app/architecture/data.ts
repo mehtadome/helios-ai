@@ -1,9 +1,5 @@
 export const ARCH_DECISIONS = [
   {
-    label: "Rate limiting",
-    detail: "Per-IP Redis TTL · 90s cooldown · 429 surfaced to client with countdown",
-  },
-  {
     label: "Concurrency block",
     detail: "submitting.current ref — ignores re-submit while a job is in flight",
   },
