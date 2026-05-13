@@ -24,12 +24,11 @@ export default function Tier1Diagram() {
       <text x="74" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>Browser</text>
       <text x="74" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Client</text>
 
-      {/* SSO: x=144, y=25, w=108, h=54 */}
+      {/* SSO: x=144, y=25, w=68, h=54 */}
       <g filter="url(#ns1)">
-        <rect x="144" y="25" width="108" height="54" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
+        <rect x="144" y="25" width="68" height="54" rx="10" fill="white" stroke={stroke} strokeWidth="1.5" />
       </g>
-      <text x="198" y="50" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>SSO</text>
-      <text x="198" y="67" textAnchor="middle" fontSize="10" fill={lbl}>Helios IdP</text>
+      <text x="178" y="55" textAnchor="middle" fontSize="12" fontWeight="700" fill={heading}>SSO</text>
 
       {/* App Server: x=268, y=25, w=148, h=54 */}
       <g filter="url(#ns1)">
@@ -81,10 +80,10 @@ export default function Tier1Diagram() {
       <line x1="144" y1="57" x2="128" y2="57" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
 
       {/* 2a · SSO → App Server (no label) */}
-      <line x1="252" y1="47" x2="268" y2="47" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      <line x1="212" y1="47" x2="268" y2="47" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
 
       {/* 2b · App Server → SSO (no label) */}
-      <line x1="268" y1="57" x2="252" y2="57" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
+      <line x1="268" y1="57" x2="212" y2="57" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
 
       {/* 3 · App Server → HeyGen (no label) */}
       <line x1="416" y1="47" x2="556" y2="47" stroke={arrow} strokeWidth="1.5" markerEnd="url(#arr1)" />
