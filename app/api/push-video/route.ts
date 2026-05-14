@@ -38,6 +38,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid destination URL" }, { status: 400 });
   }
 
+  // Block SSRF on the destination side — destination is customer infrastructure so we can't
+  // allowlist domains, but we can reject non-HTTPS and RFC-1918 / loopback / link-local ranges
+  // to prevent this endpoint being used as a proxy to internal AWS metadata or VPC services.
+  const destUrl = new URL(destination);
+  if (destUrl.protocol !== "https:") {
+    return NextResponse.json({ ok: false, error: "destination must use HTTPS" }, { status: 400 });
+  }
+  const privateRange = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|169\.254\.)/;
+  if (privateRange.test(destUrl.hostname)) {
+    return NextResponse.json({ ok: false, error: "destination must be a public URL" }, { status: 400 });
+  }
+
   console.log(`[push-video] method: ${method}, destination: ${destination}`);
 
   // Step 2 — fetch from HeyGen
