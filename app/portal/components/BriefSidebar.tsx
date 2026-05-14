@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Brief } from "@/app/types";
 import { STATUS_CONFIG } from "@/app/lib/constants";
+import { formatRelative } from "@/app/lib/utils";
 
 interface Props {
   briefs: Brief[];
@@ -115,7 +116,7 @@ export default function BriefSidebar({ briefs, selectedId, onSelect, onNew, onRe
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-muted flex-shrink-0 pt-0.5">{brief.createdAt}</span>
+                  <span className="text-xs text-muted flex-shrink-0 pt-0.5">{formatRelative(brief.createdAt)}</span>
                 </div>
               </motion.button>
             );
@@ -156,7 +157,7 @@ export default function BriefSidebar({ briefs, selectedId, onSelect, onNew, onRe
               <span className={`inline-block w-1.5 h-1.5 rounded-full flex-shrink-0 ${STATUS_CONFIG[tooltip.brief.status].dot}`} />
               <span className="text-xs text-muted">{STATUS_CONFIG[tooltip.brief.status].label}</span>
             </div>
-            <p className="text-xs text-muted mt-1">{tooltip.brief.createdAt}</p>
+            <p className="text-xs text-muted mt-1">{formatRelative(tooltip.brief.createdAt)}</p>
           </motion.div>
         )}
       </AnimatePresence>

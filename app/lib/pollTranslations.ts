@@ -19,12 +19,14 @@ export async function pollTranslations(
   await Promise.all(
     pending.map(async (v) => {
       console.log(`[pollTranslations] starting poll for ${v.language} — translationId: ${v.translationId}`);
+      let errorStreak = 0;
       for (let poll = 0; poll < 900; poll++) {
         await new Promise((r) => setTimeout(r, 5000));
         try {
           const res = await fetch(`/api/translation-status/${v.translationId}`);
           const data = await res.json();
           if (!data.ok || data.failed) return;
+          errorStreak = 0;
           if (data.done) {
             onLanguageCompleted({
               language: v.language,
@@ -35,7 +37,7 @@ export async function pollTranslations(
             return;
           }
         } catch {
-          return;
+          if (++errorStreak >= 3) return;
         }
       }
     })

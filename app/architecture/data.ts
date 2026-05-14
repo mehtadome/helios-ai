@@ -1,57 +1,57 @@
 export const ARCH_DECISIONS = [
   {
     label: "Concurrency block",
-    detail: "submitting.current ref — ignores re-submit while a job is in flight",
+    detail: "Client-side ref blocks re-submission while a job is in flight — prevents duplicate HeyGen sessions from a double-click or fast re-submit.",
   },
   {
     label: "60-min timeout",
-    detail: "MAX_POLLS ceiling · relies on HeyGen's own failed signal, not a timer",
+    detail: "MAX_POLLS ceiling · relies on HeyGen's own failed signal, not a timer.",
   },
   {
     label: "Failure handling",
-    detail: "HeyGen failed: failure_code stored, retry queued with backoff. HeyGen 429: QStash exponential backoff, throughput cap auto-lowered. Webhook timeout: cron fallback polls every 5 min.",
+    detail: "HeyGen failed: surfaced to UI, user re-submits. 429: Retry-After returned to client with live countdown. Transient errors: 3 retries before error banner.",
   },
   {
-    label: "Cost tracking (TODO)",
-    detail: "Each job row captures heygen_credit_cost and render_time_s. Neon view: monthly_cost_by_org surfaced in internal dashboard. Alert on org budget threshold breach.",
+    label: "Cost tracking",
+    detail: "Each video captures credit cost and render duration from the HeyGen API response, displayed per-video in the portal.",
   },
 ];
 
 export const TIER1_DECISIONS = [
   {
     label: "Helios IdP (SAML / OIDC)",
-    detail: "org-scoped sessions tied to Helios's identity provider; HeyGen API key stays server-side only",
+    detail: "Org-scoped sessions tied to Helios's identity provider; HeyGen API key stays server-side only.",
   },
   {
     label: "Postgres (self-hosted)",
-    detail: "orgs · users · briefs · jobs schema; row-level security by org_id; status tracked in DB",
+    detail: "orgs · users · briefs · jobs schema; row-level security by org_id; status tracked in DB.",
   },
   {
     label: "Webhook + auto-push",
-    detail: "HeyGen POSTs to /api/webhook on completion; HMAC-SHA256 verified; MP4 written directly to On-Premise Blob — no manual download",
+    detail: "HeyGen POSTs to /api/webhook on completion; HMAC-SHA256 verified; MP4 written directly to On-Premise Blob.",
   },
   {
     label: "Idempotency",
-    detail: "Every job gets a deterministic key = hash(brief_id + role + language). Worker checks Postgres before calling HeyGen — prevents duplicate renders on queue retry.",
+    detail: "Every job gets a deterministic key. Worker checks Postgres before calling HeyGen — prevents duplicate renders on queue retry.",
   },
   {
     label: "Security",
-    detail: "HeyGen API key: Vercel env var only — never in browser. Webhook: HMAC-SHA256 verified before processing. Blob: private by default, pre-signed URLs. All data scoped by org_id (row-level security).",
+    detail: "HeyGen API key: server env var only. Webhook: HMAC-SHA256 verified. Blob: private, pre-signed URLs. All data scoped by org_id (row-level security).",
   },
 ];
 
 export const TIER2_DECISIONS = [
   {
     label: "Job Queue (retry + DLQ)",
-    detail: "async dispatch decouples submission from rendering; automatic retry on transient failure; dead letter queue alerts on spike",
+    detail: "Async dispatch decouples submission from rendering; automatic retry on transient failure; dead letter queue alerts on spike.",
   },
   {
     label: "Doc ingestion",
-    detail: "PDF / slide deck parsed into the 6-section brief schema; knowledge base search auto-suggests content from internal docs",
+    detail: "PDF / slide deck parsed into the 6-section brief schema; knowledge base search auto-suggests content from internal docs.",
   },
   {
     label: "Enablement Tool integration",
-    detail: "video auto-published to seller's library (Highspot, Seismic, etc.) on webhook completion — no manual download step",
+    detail: "Video auto-published to seller's library (Highspot, Seismic, etc.) on webhook completion.",
   },
 ];
 

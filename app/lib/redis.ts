@@ -8,7 +8,13 @@ declare global {
 function getClient() {
   if (!process.env.REDIS_URL) throw new Error("REDIS_URL not configured");
   if (!global._redisClient) {
-    global._redisClient = createClient({ url: process.env.REDIS_URL });
+    global._redisClient = createClient({
+      url: process.env.REDIS_URL,
+      socket: {
+        reconnectStrategy: (retries) =>
+          retries > 3 ? new Error("Redis unreachable after 3 retries") : retries * 200,
+      },
+    });
     global._redisClient.on("error", (err) =>
       console.error("[redis] client error:", err)
     );

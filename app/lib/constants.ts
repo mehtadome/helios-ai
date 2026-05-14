@@ -81,7 +81,7 @@ export const BROLL_ASSETS: Partial<Record<SectionKey, string>> = {
 // Selectable options
 // ---------------------------------------------------------------------------
 
-export const ROLES = ["Account Executive", "SDR", "Partner Manager"] as const;
+export const ROLES = ["Account Executive", "Sales Development Rep", "Partner Manager"] as const;
 
 export const LANGUAGES = [
   "English",
@@ -215,8 +215,8 @@ export const DEMO_BRIEFS: DemoBrief[] = [
     },
   },
   {
-    name: "SDR Pipeline Brief",
-    role: "SDR",
+    name: "Sales Development Rep Pipeline Brief",
+    role: "Sales Development Rep",
     languages: ["Spanish"],
     avatar_id: "Adrian_public_2_20240312",
     voice_id:  "d92994ae0de34b2e8659b456a2f388b8", // John (male)
@@ -276,7 +276,7 @@ export const DEMO_BRIEFS: DemoBrief[] = [
   },
   {
     name: "International Launch",
-    role: "SDR",
+    role: "Sales Development Rep",
     languages: ["French", "Spanish", "Italian"],
     avatar_id: "Abigail_standing_office_front",
     voice_id:  "b966c31caf124c2a99f19ff1479c964f", // Jessica (female)

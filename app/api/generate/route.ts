@@ -85,11 +85,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Missing languages" }, { status: 400 });
   }
 
-  // Step 5 — build HeyGen payload.
-  // Generate English master first; additional languages fan out via /v3/video-translate
+  // Step 1 — build HeyGen payload.
+  // Generate primary-language master first; additional languages fan out via /v3/video-translations
   // after the master completes (see /api/status for translation dispatch).
   const primaryLanguage = languages.includes("English") ? "English" : languages[0];
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://helios-ai-eosin.vercel.app";
+  const baseUrl = process.env.BASE_URL ?? "https://helios-ai-eosin.vercel.app";
 
   const payload = {
     prompt:      buildPrompt(sections, role, primaryLanguage),
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     callback_id:  crypto.randomUUID(),
   };
 
-  // Step 6 — submit to HeyGen Video Agent API
+  // Step 2 — submit to HeyGen Video Agent API
   const apiKey = process.env.HEYGEN_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ ok: false, error: "HEYGEN_API_KEY not configured" }, { status: 500 });
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Failed to reach HeyGen API" }, { status: 502 });
   }
 
-  // Step 1 — Detect HeyGen 429 and surface retryAfter to the client.
+  // Step 3 — Detect HeyGen 429 and surface retryAfter to the client.
   if (heygenRes.status === 429) {
     const retryAfter = parseInt(heygenRes.headers.get("Retry-After") ?? "60", 10);
     console.warn(`[generate] HeyGen 429 — retryAfter: ${retryAfter}s`);

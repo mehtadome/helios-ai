@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Brief } from "@/app/types";
 import { SECTION_LABELS } from "@/app/lib/constants";
+import { formatRelative } from "@/app/lib/utils";
 import DownloadModal from "./DownloadModal";
 
 // ---------------------------------------------------------------------------
@@ -35,11 +36,13 @@ function VideoPlaceholder({
   language,
   status,
   url,
+  duration,
   onDownloadClick,
 }: {
   language: string;
   status: string;
   url: string | null;
+  duration?: number;
   onDownloadClick: () => void;
 }) {
   if (url) {
@@ -119,7 +122,7 @@ function VideoPlaceholder({
             <span className="w-1.5 h-1.5 rounded-full bg-blue" />
             <span className="text-xs font-medium text-white/80">{language}</span>
           </div>
-          <span className="text-xs text-white/60">73s · MP4</span>
+          <span className="text-xs text-white/60">{duration ? `${Math.round(duration)}s · MP4` : "MP4"}</span>
         </div>
 
         {/* "Connect API" overlay message */}
@@ -220,7 +223,7 @@ export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelet
             {brief.role} Brief
             {brief.videos.length === 1 ? ` — ${brief.language}` : brief.videos.length > 1 ? ` — ${brief.videos.length} languages` : ""}
           </h1>
-          <p className="text-xs text-muted mt-1">Submitted {brief.createdAt}</p>
+          <p className="text-xs text-muted mt-1">Submitted {formatRelative(brief.createdAt)}</p>
         </div>
       </div>
 
@@ -262,6 +265,7 @@ export default function BriefDetail({ brief, onDelete }: { brief: Brief; onDelet
             language={activeLanguage}
             status={activeVideo?.status ?? "completed"}
             url={activeVideo?.url ?? null}
+            duration={activeVideo?.duration}
             onDownloadClick={() =>
               setDownloadTarget({ language: activeLanguage, url: activeVideo?.url ?? null })
             }
