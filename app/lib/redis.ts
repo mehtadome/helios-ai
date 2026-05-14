@@ -12,7 +12,7 @@ function getClient() {
       url: process.env.REDIS_URL,
       socket: {
         reconnectStrategy: (retries) =>
-          retries > 3 ? new Error("Redis unreachable after 3 retries") : retries * 200,
+          retries >= 3 ? new Error("Redis unreachable after 3 retries") : retries * 200,
       },
     });
     global._redisClient.on("error", (err) =>

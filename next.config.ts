@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  // unsafe-inline/eval required by Next.js dev + RSC
+              `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""}`,  // unsafe-eval required by Next.js dev only
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https://files2.heygen.ai",
               "media-src 'self' https://*.heygen.ai https://*.heygen.com https://resource2.heygen.ai",
