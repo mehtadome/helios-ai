@@ -32,7 +32,7 @@ export const TIER1_DECISIONS = [
   },
   {
     label: "Idempotency",
-    detail: "Every job gets a deterministic key = hash(brief_id + role + language). Worker checks Postgres before calling HeyGen — prevents duplicate renders on queue retry.",
+    detail: "Every job gets a deterministic key. Worker checks Postgres before calling HeyGen — prevents duplicate renders on queue retry.",
   },
   {
     label: "Security",
