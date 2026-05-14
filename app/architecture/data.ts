@@ -36,7 +36,7 @@ export const TIER1_DECISIONS = [
   },
   {
     label: "Security",
-    detail: "HeyGen API key: Vercel env var only — never in browser. Webhook: HMAC-SHA256 verified before processing. Blob: private by default, pre-signed URLs. All data scoped by org_id (row-level security).",
+    detail: "HeyGen API key: server env var only. Webhook: HMAC-SHA256 verified. Blob: private, pre-signed URLs. All data scoped by org_id (row-level security).",
   },
 ];
 
