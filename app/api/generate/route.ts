@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AVATAR_ID, VOICE_IDS, BROLL_ASSETS, SCENE_TYPES, type SectionKey } from "@/app/lib/constants";
-import { getRedis } from "@/app/lib/redis";
 
 interface GenerateBody {
   sections: Partial<Record<SectionKey, string>>;
@@ -48,6 +47,7 @@ ${sectionBlocks}
 Keep the total runtime between 60 and 90 seconds. Maintain a confident, coaching tone throughout. Use the attached product visuals for sections marked "Cut to the attached product visual."`;
 }
 
+// Build B-roll file list to pass to HeyGen
 function buildFiles(
   sections: Partial<Record<SectionKey, string>>,
   baseUrl: string
@@ -61,8 +61,6 @@ function buildFiles(
 }
 
 export async function POST(req: NextRequest) {
-  const redis = await getRedis();
-
   let body: GenerateBody;
 
   try {
