@@ -5,7 +5,7 @@ export const ARCH_DECISIONS = [
   },
   {
     label: "60-min timeout",
-    detail: "MAX_POLLS ceiling · relies on HeyGen's own failed signal, not a timer",
+    detail: "MAX_POLLS ceiling · relies on HeyGen's own failed signal, not a timer.",
   },
   {
     label: "Failure handling",
@@ -20,15 +20,15 @@ export const ARCH_DECISIONS = [
 export const TIER1_DECISIONS = [
   {
     label: "Helios IdP (SAML / OIDC)",
-    detail: "Org-scoped sessions tied to Helios's identity provider; HeyGen API key stays server-side only",
+    detail: "Org-scoped sessions tied to Helios's identity provider; HeyGen API key stays server-side only.",
   },
   {
     label: "Postgres (self-hosted)",
-    detail: "orgs · users · briefs · jobs schema; row-level security by org_id; status tracked in DB",
+    detail: "orgs · users · briefs · jobs schema; row-level security by org_id; status tracked in DB.",
   },
   {
     label: "Webhook + auto-push",
-    detail: "HeyGen POSTs to /api/webhook on completion; HMAC-SHA256 verified; MP4 written directly to On-Premise Blob",
+    detail: "HeyGen POSTs to /api/webhook on completion; HMAC-SHA256 verified; MP4 written directly to On-Premise Blob.",
   },
   {
     label: "Idempotency",
@@ -43,15 +43,15 @@ export const TIER1_DECISIONS = [
 export const TIER2_DECISIONS = [
   {
     label: "Job Queue (retry + DLQ)",
-    detail: "async dispatch decouples submission from rendering; automatic retry on transient failure; dead letter queue alerts on spike",
+    detail: "Async dispatch decouples submission from rendering; automatic retry on transient failure; dead letter queue alerts on spike.",
   },
   {
     label: "Doc ingestion",
-    detail: "PDF / slide deck parsed into the 6-section brief schema; knowledge base search auto-suggests content from internal docs",
+    detail: "PDF / slide deck parsed into the 6-section brief schema; knowledge base search auto-suggests content from internal docs.",
   },
   {
     label: "Enablement Tool integration",
-    detail: "video auto-published to seller's library (Highspot, Seismic, etc.) on webhook completion — no manual download step",
+    detail: "Video auto-published to seller's library (Highspot, Seismic, etc.) on webhook completion.",
   },
 ];
 
