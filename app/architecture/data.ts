@@ -20,7 +20,7 @@ export const ARCH_DECISIONS = [
 export const TIER1_DECISIONS = [
   {
     label: "Helios IdP (SAML / OIDC)",
-    detail: "org-scoped sessions tied to Helios's identity provider; HeyGen API key stays server-side only",
+    detail: "Org-scoped sessions tied to Helios's identity provider; HeyGen API key stays server-side only",
   },
   {
     label: "Postgres (self-hosted)",
