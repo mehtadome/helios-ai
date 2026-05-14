@@ -2,7 +2,8 @@ import type { Brief } from "@/app/types";
 
 export type TranslationResult = {
   language: string;
-  url: string;
+  url: string | null;
+  failed?: boolean;
   duration?: number;
   credit_cost?: number;
 };
@@ -25,7 +26,11 @@ export async function pollTranslations(
         try {
           const res = await fetch(`/api/translation-status/${v.translationId}`);
           const data = await res.json();
-          if (!data.ok || data.failed) return;
+          if (!data.ok) return;
+          if (data.failed) {
+            onLanguageCompleted({ language: v.language, url: null, failed: true });
+            return;
+          }
           errorStreak = 0;
           if (data.done) {
             onLanguageCompleted({

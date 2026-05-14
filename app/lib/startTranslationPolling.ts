@@ -16,11 +16,13 @@ export function startTranslationPolling(
   );
   if (pending.length === 0) return;
 
-  pollTranslations(brief, ({ language, url, duration, credit_cost }) => {
+  pollTranslations(brief, ({ language, url, failed, duration, credit_cost }) => {
     onBriefUpdate(brief.id, (b) => {
       const updatedVideos = b.videos.map((v) =>
         v.language === language
-          ? { ...v, url, video_url: url, status: "completed" as const, duration, credit_cost }
+          ? failed
+            ? { ...v, status: "failed" as const }
+            : { ...v, url, video_url: url, status: "completed" as const, duration, credit_cost }
           : v
       );
       const allDone = updatedVideos.every(
