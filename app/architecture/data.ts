@@ -1,7 +1,7 @@
 export const ARCH_DECISIONS = [
   {
     label: "Concurrency block",
-    detail: "submitting.current ref — ignores re-submit while a job is in flight",
+    detail: "Client-side ref blocks re-submission while a job is in flight — prevents duplicate HeyGen sessions from a double-click or fast re-submit.",
   },
   {
     label: "60-min timeout",
