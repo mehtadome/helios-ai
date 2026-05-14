@@ -13,7 +13,7 @@ export const ARCH_DECISIONS = [
   },
   {
     label: "Cost tracking",
-    detail: "Each video captures heygen_credit_cost (ceil(duration / 60)) and render duration from the HeyGen API response. Displayed per-video in the portal. Tier 1: persisted per job in Postgres with org-level rollup.",
+    detail: "Each video captures credit cost and render duration from the HeyGen API response, displayed per-video in the portal.",
   },
 ];
 
