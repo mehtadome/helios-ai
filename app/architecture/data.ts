@@ -9,7 +9,7 @@ export const ARCH_DECISIONS = [
   },
   {
     label: "Failure handling",
-    detail: "HeyGen failed: failure_code surfaced to UI, user re-submits. HeyGen 429: Retry-After header extracted and returned to client; UI shows live countdown. Transient errors: poll loop retries up to 3 consecutive failures before surfacing error banner.",
+    detail: "HeyGen failed: surfaced to UI, user re-submits. 429: Retry-After returned to client with live countdown. Transient errors: 3 retries before error banner.",
   },
   {
     label: "Cost tracking",
