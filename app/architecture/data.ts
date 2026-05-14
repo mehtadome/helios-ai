@@ -28,7 +28,7 @@ export const TIER1_DECISIONS = [
   },
   {
     label: "Webhook + auto-push",
-    detail: "HeyGen POSTs to /api/webhook on completion; HMAC-SHA256 verified; MP4 written directly to On-Premise Blob — no manual download",
+    detail: "HeyGen POSTs to /api/webhook on completion; HMAC-SHA256 verified; MP4 written directly to On-Premise Blob",
   },
   {
     label: "Idempotency",
