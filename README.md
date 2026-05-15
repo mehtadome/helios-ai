@@ -39,8 +39,6 @@ npm run lint    # eslint
 
 ## Architecture
 
-See [`docs/architecture.md`](docs/architecture.md) for the full three-tier design (Helios systems → integration middleware → HeyGen API), async job model, and scale story (10k+ videos/year).
-
 See [`docs/api.md`](docs/api.md) for HeyGen Video Agent API integration notes.
 
 ## Project structure
