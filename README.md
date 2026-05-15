@@ -39,6 +39,8 @@ npm run lint    # eslint
 
 ## Architecture
 
+Live: [helios-ai-eosin.vercel.app/architecture](https://helios-ai-eosin.vercel.app/architecture)
+
 See [`docs/api.md`](docs/api.md) for HeyGen Video Agent API integration notes.
 
 ## Project structure
