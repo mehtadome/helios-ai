@@ -47,12 +47,25 @@ See [`docs/api.md`](docs/api.md) for HeyGen Video Agent API integration notes.
 
 ```
 app/
-  components/       # BriefForm, HeroSection, Navbar
+  api/
+    briefs/             # GET / PUT / DELETE — Redis brief persistence
+    generate/           # POST — HeyGen Video Agent session submission
+    push-video/         # POST — proxy completed video to destination URL
+    status/[jobId]/     # GET — master video poll + translation dispatch
+    translation-status/ # GET — per-language translation poll
+    videos/             # GET — HeyGen video list
+    webhook/            # POST — HeyGen completion callback (T0 stub)
+  architecture/         # in-app architecture diagram and tier breakdown
+  components/           # BriefForm, HeroSection, Navbar, SceneVisual
   lib/
-    constants.ts    # static config: roles, languages, sections, status steps, demo briefs
-    mock-data.ts    # seed data to be replaced by API calls
+    constants.ts            # roles, languages, sections, avatar/voice IDs, B-roll assets
+    mock-data.ts            # demo brief seed data
+    pollTranslations.ts     # per-language translation poll loop
+    redis.ts                # Redis client with reconnect strategy
+    resumePoll.ts           # master video poll loop
+    startTranslationPolling.ts  # kicks off pollTranslations per pending language
+    utils.ts                # formatRelative()
   portal/
-    components/     # PortalShell, BriefSidebar, BriefDetail
+    components/     # PortalShell, BriefSidebar, BriefDetail, DownloadModal, AccountPopover
   types.ts          # shared TypeScript interfaces
-docs/               # architecture and API notes
 ```
