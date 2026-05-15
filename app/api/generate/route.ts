@@ -125,6 +125,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Step 3 — Detect HeyGen 429 and surface retryAfter to the client.
+  // Falls back to 60 seconds.
   if (heygenRes.status === 429) {
     const retryAfter = parseInt(heygenRes.headers.get("Retry-After") ?? "60", 10);
     console.warn(`[generate] HeyGen 429 — retryAfter: ${retryAfter}s`);
